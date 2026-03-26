@@ -898,7 +898,7 @@ tr:hover td{background:var(--card);}
 import { initializeApp }        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signOut, onAuthStateChanged }
                                 from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, getDocs, getDoc, addDoc, doc, updateDoc, query,
+import { getFirestore, collection, getDocs, getDoc, addDoc, doc, setDoc, runTransaction, updateDoc, query,
          where, orderBy, limit, serverTimestamp, Timestamp }
                                 from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
@@ -1161,6 +1161,29 @@ async function loadDropdownLists() {
   fill('jobList',     stored.job);
 }
 
+/* ── CN Counter helpers (same logic as new-borrower.html) ── */
+const cnCounterRef = doc(db, 'counters', 'borrowers');
+
+async function ensureCNCounter() {
+  const snap = await getDoc(cnCounterRef);
+  if (!snap.exists()) {
+    const bSnap = await getDocs(collection(db, 'borrowers'));
+    const nums = bSnap.docs.map(d => parseInt((d.data().clientNumber || 'CN000000').replace('CN', '')) || 0);
+    await setDoc(cnCounterRef, { lastCN: Math.max(0, ...nums) });
+  }
+}
+
+async function claimNextCN() {
+  await ensureCNCounter();
+  const next = await runTransaction(db, async tx => {
+    const snap = await tx.get(cnCounterRef);
+    const next = (snap.data()?.lastCN || 0) + 1;
+    tx.set(cnCounterRef, { lastCN: next });
+    return next;
+  });
+  return `CN${String(next).padStart(6, '0')}`;
+}
+
 document.getElementById('saveBorrowerBtn').addEventListener('click', async () => {
   const firstName = document.getElementById('bFirstName').value.trim();
   const lastName  = document.getElementById('bLastName').value.trim();
@@ -1172,12 +1195,10 @@ document.getElementById('saveBorrowerBtn').addEventListener('click', async () =>
   btn.disabled = true; btn.textContent = 'Saving…';
 
   try {
-    const allSnap = await getDocs(collection(db,'borrowers'));
-    const nums = allSnap.docs.map(d=>parseInt((d.data().clientNumber||'CN000000').replace('CN',''))||0);
-    const nextNum = (Math.max(0,...nums)+1).toString().padStart(6,'0');
+    const clientNumber = await claimNextCN();
 
     await addDoc(collection(db,'borrowers'),{
-      clientNumber: `CN${nextNum}`,
+      clientNumber,
       firstName, lastName,
       company:      document.getElementById('bCompany').value.trim(),
       branch:       document.getElementById('bBranch').value.trim(),
