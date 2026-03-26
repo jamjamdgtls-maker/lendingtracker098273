@@ -76,7 +76,8 @@ input,select,textarea{font-family:var(--font-b);}
 .btn-logout:hover{background:rgba(239,68,68,.08);}
 .btn-logout svg{width:.85rem;height:.85rem;}
 .sidebar-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);opacity:0;transition:opacity var(--tr);}
-.sidebar-overlay.show{opacity:1;}
+.sidebar-overlay{pointer-events:none;}
+.sidebar-overlay.show{opacity:1;pointer-events:auto;}
 
 /* ── TOPBAR ── */
 .topbar{display:none;height:var(--topbar-h);background:var(--surface);border-bottom:1px solid var(--border);align-items:center;gap:.75rem;padding:0 1rem;position:fixed;top:0;left:0;right:0;z-index:180;}
@@ -159,7 +160,8 @@ tr:hover td{background:var(--card);}
 .td-fb-link a:hover{background:#3b82f6;color:#fff;}
 .td-fb-link svg{width:.72rem;height:.72rem;}
 
-/* ── ACTION BUTTON ── */
+/* ── ACTION BUTTONS ── */
+.action-cell{display:flex;align-items:center;gap:.4rem;}
 .btn-edit{
   display:inline-flex;align-items:center;gap:.3rem;
   padding:.25rem .65rem;border-radius:var(--rs);
@@ -169,6 +171,40 @@ tr:hover td{background:var(--card);}
 }
 .btn-edit:hover{background:var(--primary);color:#fff;}
 .btn-edit svg{width:.72rem;height:.72rem;}
+.btn-delete{
+  display:inline-flex;align-items:center;gap:.3rem;
+  padding:.25rem .65rem;border-radius:var(--rs);
+  background:rgba(239,68,68,.08);color:var(--danger);
+  border:1px solid rgba(239,68,68,.2);
+  font-size:.7rem;font-weight:600;transition:var(--tr);white-space:nowrap;
+}
+.btn-delete:hover{background:var(--danger);color:#fff;}
+.btn-delete svg{width:.72rem;height:.72rem;}
+
+/* ── DELETE CONFIRM MODAL ── */
+.delete-modal{max-width:420px;}
+.delete-warning{
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;gap:.75rem;padding:.5rem 0;
+}
+.delete-warning-icon{
+  width:3.5rem;height:3.5rem;border-radius:50%;
+  background:rgba(239,68,68,.1);border:2px solid rgba(239,68,68,.2);
+  display:grid;place-items:center;
+}
+.delete-warning-icon svg{width:1.6rem;height:1.6rem;color:var(--danger);}
+.delete-warning-title{font-family:var(--font-d);font-weight:800;font-size:1.05rem;color:var(--text);}
+.delete-warning-body{font-size:.82rem;color:var(--text2);line-height:1.55;}
+.delete-warning-name{font-weight:700;color:var(--danger);}
+.delete-active-warn{
+  background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);
+  border-radius:var(--rs);padding:.65rem .85rem;
+  font-size:.78rem;color:var(--text2);line-height:1.5;
+  display:flex;align-items:flex-start;gap:.5rem;
+}
+.delete-active-warn svg{width:1rem;height:1rem;color:var(--warn);flex-shrink:0;margin-top:.1rem;}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-danger:hover{background:#dc2626;box-shadow:0 4px 16px rgba(239,68,68,.35);transform:translateY(-1px);}
 
 /* ── PAGINATION ── */
 .pagination{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.1rem;border-top:1px solid var(--border);flex-wrap:wrap;gap:.75rem;}
@@ -454,13 +490,47 @@ tr:hover td{background:var(--card);}
   </div>
 </div>
 
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal delete-modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Delete Client</h2>
+      <button class="modal-close" data-close="deleteModal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="delete-warning">
+        <div class="delete-warning-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </div>
+        <div class="delete-warning-title">Are you sure?</div>
+        <div class="delete-warning-body">
+          You are about to permanently delete<br/>
+          <span class="delete-warning-name" id="deleteClientName">—</span><br/>
+          This action <strong>cannot be undone</strong>.
+        </div>
+        <div class="delete-active-warn" id="deleteActiveWarn" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="deleteActiveWarnText">This client has active loans. Deleting the client record will not remove their loan or payment data.</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close="deleteModal">Cancel</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        Delete Client
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
 import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signOut, onAuthStateChanged }
                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, getDocs, getDoc, doc, updateDoc }
+import { getFirestore, collection, getDocs, getDoc, doc, updateDoc, deleteDoc, query, where }
                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig={apiKey:"AIzaSyBjYXRXK2lGBdUiWku1rae7MTpYl3bl0hw",authDomain:"lending-management-app-460f5.firebaseapp.com",projectId:"lending-management-app-460f5",storageBucket:"lending-management-app-460f5.firebasestorage.app",messagingSenderId:"167550754445",appId:"1:167550754445:web:e1548d3b0f52b751ed0cc4"};
@@ -632,7 +702,11 @@ function renderTable(){
       :'—';
     const editBtn=window._isAdmin
       ?`<button class="btn-edit" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>`
-      :'—';
+      :'';
+    const deleteBtn=window._isAdmin
+      ?`<button class="btn-delete" data-del="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Delete</button>`
+      :'';
+    const actionCell = window._isAdmin ? `<div class="action-cell">${editBtn}${deleteBtn}</div>` : '—';
     return `<tr style="animation:fadeUp .22s ${i*.018}s both;">
       <td>
         <div style="display:flex;align-items:center;gap:.6rem;">
@@ -651,7 +725,7 @@ function renderTable(){
       <td>${safe(b.jobPosition)}</td>
       <td style="font-size:.76rem;">${safe(b.facebookName)}</td>
       <td class="td-fb-link">${fbCell}</td>
-      <td>${editBtn}</td>
+      <td>${actionCell}</td>
     </tr>`;
   }).join('');
 
@@ -660,6 +734,9 @@ function renderTable(){
 
   document.querySelectorAll('.btn-edit[data-bid]').forEach(btn=>{
     btn.addEventListener('click',()=>openEditModal(btn.dataset.bid));
+  });
+  document.querySelectorAll('.btn-delete[data-del]').forEach(btn=>{
+    btn.addEventListener('click',()=>openDeleteModal(btn.dataset.del));
   });
 
   renderPagination(filtered.length);
@@ -683,8 +760,52 @@ function renderPagination(total){
 }
 
 /* ══════════════════════════════════════════
-   EDIT BORROWER
+   DELETE BORROWER
 ══════════════════════════════════════════ */
+let deletingBorrower = null;
+
+async function openDeleteModal(borrowerId) {
+  const b = allBorrowers.find(x => x.id === borrowerId);
+  if (!b) return;
+  deletingBorrower = b;
+
+  const fullName = `${b.firstName || ''} ${b.lastName || ''}`.trim();
+  document.getElementById('deleteClientName').textContent = `${fullName} (${b.clientNumber || 'No #'})`;
+
+  // Check for active loans
+  const loansSnap = await getDocs(query(collection(db, 'loans'), where('borrowerId', '==', borrowerId), where('status', '==', 'active')));
+  const activeWarn = document.getElementById('deleteActiveWarn');
+  const activeWarnText = document.getElementById('deleteActiveWarnText');
+  if (!loansSnap.empty) {
+    activeWarnText.textContent = `This client has ${loansSnap.size} active loan${loansSnap.size > 1 ? 's' : ''}. Deleting the client record will NOT remove their loan or payment data.`;
+    activeWarn.style.display = 'flex';
+  } else {
+    activeWarn.style.display = 'none';
+  }
+
+  document.getElementById('deleteModal').classList.add('open');
+}
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+  if (!deletingBorrower) return;
+  const btn = document.getElementById('confirmDeleteBtn');
+  btn.disabled = true; btn.textContent = 'Deleting…';
+  try {
+    await deleteDoc(doc(db, 'borrowers', deletingBorrower.id));
+    const fullName = `${deletingBorrower.firstName || ''} ${deletingBorrower.lastName || ''}`.trim();
+    allBorrowers = allBorrowers.filter(b => b.id !== deletingBorrower.id);
+    buildFilterDropdowns();
+    applyFilters();
+    document.getElementById('deleteModal').classList.remove('open');
+    toast(`${fullName} has been deleted.`, 'info');
+    deletingBorrower = null;
+  } catch (err) {
+    toast('Error deleting client: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Delete Client';
+  }
+});
 function openEditModal(borrowerId){
   const b=allBorrowers.find(x=>x.id===borrowerId);
   if(!b)return;
