@@ -170,18 +170,6 @@ tr:hover td{background:var(--card);}
 .btn-edit:hover{background:var(--primary);color:#fff;}
 .btn-edit svg{width:.72rem;height:.72rem;}
 
-/* ── DELETE BUTTON ── */
-.btn-delete{
-  display:inline-flex;align-items:center;gap:.3rem;
-  padding:.25rem .65rem;border-radius:var(--rs);
-  background:rgba(239,68,68,.08);color:var(--danger);
-  border:1px solid rgba(239,68,68,.2);
-  font-size:.7rem;font-weight:600;transition:var(--tr);white-space:nowrap;
-}
-.btn-delete:hover{background:var(--danger);color:#fff;}
-.btn-delete svg{width:.72rem;height:.72rem;}
-.action-cell{display:flex;gap:.35rem;align-items:center;}
-
 /* ── PAGINATION ── */
 .pagination{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.1rem;border-top:1px solid var(--border);flex-wrap:wrap;gap:.75rem;}
 .pag-info{font-size:.75rem;color:var(--text3);font-weight:500;}
@@ -372,7 +360,12 @@ tr:hover td{background:var(--card);}
           </tr>
         </thead>
         <tbody id="clientTbody">
-          <!-- skeleton rows injected by JS -->
+          <tr><td colspan="11">
+            <div class="empty-state">
+              <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <div class="empty-title">Loading clients…</div>
+            </div>
+          </td></tr>
         </tbody>
       </table>
     </div>
@@ -461,34 +454,13 @@ tr:hover td{background:var(--card);}
   </div>
 </div>
 
-<!-- DELETE CONFIRM MODAL -->
-<div class="modal-overlay" id="deleteModal">
-  <div class="modal" style="max-width:420px;">
-    <div class="modal-header">
-      <h2 class="modal-title" style="color:var(--danger);">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1rem;height:1rem;display:inline-block;vertical-align:-.15em;margin-right:.35rem;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-        Delete Client
-      </h2>
-      <button class="modal-close" data-close="deleteModal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    </div>
-    <div class="modal-body" style="padding:1.4rem 1.35rem;">
-      <p style="font-size:.88rem;color:var(--text2);line-height:1.6;">Are you sure you want to delete <strong id="deleteClientName" style="color:var(--text);"></strong>? This action <strong style="color:var(--danger);">cannot be undone</strong> and will permanently remove the client record.</p>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" data-close="deleteModal">Cancel</button>
-      <button class="btn" id="confirmDeleteBtn" style="background:var(--danger);color:#fff;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-        Yes, Delete
-      </button>
-    </div>
-  </div>
-</div>
+<div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
 import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signOut, onAuthStateChanged }
                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, getDocs, getDoc, doc, updateDoc, deleteDoc }
+import { getFirestore, collection, getDocs, getDoc, doc, updateDoc }
                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig={apiKey:"AIzaSyBjYXRXK2lGBdUiWku1rae7MTpYl3bl0hw",authDomain:"lending-management-app-460f5.firebaseapp.com",projectId:"lending-management-app-460f5",storageBucket:"lending-management-app-460f5.firebasestorage.app",messagingSenderId:"167550754445",appId:"1:167550754445:web:e1548d3b0f52b751ed0cc4"};
@@ -502,21 +474,8 @@ const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov',
 const PAGE_SIZE=20;
 const safe=s=>s||(s===0?'0':'—');
 
-/* ── Skeleton loader ── */
-function showSkeletons(n=10){
-  const cols=11;
-  const widths=[['40%','55%'],['20%'],['22%'],['35%'],['30%'],['28%'],['22%'],['26%'],['30%'],['15%'],['15%','20%']];
-  const tbody=document.getElementById('clientTbody');
-  tbody.innerHTML=Array.from({length:n},(_,r)=>`<tr style="animation:fadeUp .18s ${r*.04}s both;">${
-    widths.map((ws,c)=>`<td>${
-      c===0
-        ? `<div style="display:flex;align-items:center;gap:.6rem;"><div class="skel" style="width:1.9rem;height:1.9rem;border-radius:50%;flex-shrink:0;"></div><div class="skel" style="height:.75rem;width:${ws[0]};border-radius:.3rem;"></div></div>`
-        : ws.map(w=>`<div class="skel" style="height:.72rem;width:${w};border-radius:.3rem;${ws.length>1?'margin-bottom:.3rem;':''}"></div>`).join('')
-    }</td>`).join('')
-  }</tr>`).join('');
-}
-showSkeletons();
-
+/* ── Auth ── */
+onAuthStateChanged(auth,async user=>{
   if(!user){window.location.href='login.html';return;}
   let sess=sessionStorage.getItem('lma_user');
   if(!sess){const snap=await getDoc(doc(db,'user_roles',user.uid));const role=snap.exists()?snap.data().role:'pending';if(role==='pending'){window.location.href='login.html';return;}sessionStorage.setItem('lma_user',JSON.stringify({uid:user.uid,email:user.email,displayName:user.displayName,photoURL:user.photoURL,role}));}
@@ -559,7 +518,6 @@ document.querySelectorAll('.modal-overlay').forEach(ov=>ov.addEventListener('cli
 let allBorrowers=[], filtered=[], currentPage=1;
 let sortCol='name', sortDir='asc';
 let editingBorrower=null;
-let deletingBorrower=null;
 
 /* ── Load Data ── */
 async function loadData(){
@@ -675,9 +633,6 @@ function renderTable(){
     const editBtn=window._isAdmin
       ?`<button class="btn-edit" data-bid="${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>`
       :'—';
-    const deleteBtn=window._isAdmin
-      ?`<button class="btn-delete" data-dbid="${b.id}" data-dname="${(b.firstName||'')} ${(b.lastName||'')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Delete</button>`
-      :'';
     return `<tr style="animation:fadeUp .22s ${i*.018}s both;">
       <td>
         <div style="display:flex;align-items:center;gap:.6rem;">
@@ -696,7 +651,7 @@ function renderTable(){
       <td>${safe(b.jobPosition)}</td>
       <td style="font-size:.76rem;">${safe(b.facebookName)}</td>
       <td class="td-fb-link">${fbCell}</td>
-      <td><div class="action-cell">${editBtn}${deleteBtn}</div></td>
+      <td>${editBtn}</td>
     </tr>`;
   }).join('');
 
@@ -705,10 +660,6 @@ function renderTable(){
 
   document.querySelectorAll('.btn-edit[data-bid]').forEach(btn=>{
     btn.addEventListener('click',()=>openEditModal(btn.dataset.bid));
-  });
-
-  document.querySelectorAll('.btn-delete[data-dbid]').forEach(btn=>{
-    btn.addEventListener('click',()=>openDeleteModal(btn.dataset.dbid, btn.dataset.dname));
   });
 
   renderPagination(filtered.length);
@@ -755,37 +706,7 @@ function openEditModal(borrowerId){
   document.getElementById('editModal').classList.add('open');
 }
 
-/* ══════════════════════════════════════════
-   DELETE BORROWER
-══════════════════════════════════════════ */
-function openDeleteModal(borrowerId, clientName){
-  const b=allBorrowers.find(x=>x.id===borrowerId);
-  if(!b)return;
-  deletingBorrower={...b};
-  document.getElementById('deleteClientName').textContent=clientName.trim()||'this client';
-  document.getElementById('deleteModal').classList.add('open');
-}
-
-document.getElementById('confirmDeleteBtn').addEventListener('click',async()=>{
-  if(!deletingBorrower)return;
-  const btn=document.getElementById('confirmDeleteBtn');
-  btn.disabled=true;btn.textContent='Deleting…';
-  try{
-    await deleteDoc(doc(db,'borrowers',deletingBorrower.id));
-    const name=`${deletingBorrower.firstName||''} ${deletingBorrower.lastName||''}`.trim();
-    allBorrowers=allBorrowers.filter(b=>b.id!==deletingBorrower.id);
-    buildFilterDropdowns();
-    applyFilters();
-    document.getElementById('deleteModal').classList.remove('open');
-    toast(`${name} has been deleted.`,'success');
-    deletingBorrower=null;
-  }catch(err){toast('Error: '+err.message,'error');}
-  finally{
-    btn.disabled=false;
-    btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:.88rem;height:.88rem;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Yes, Delete';
-  }
-});
-
+document.getElementById('saveEditBtn').addEventListener('click',async()=>{
   if(!editingBorrower)return;
   const firstName=document.getElementById('editFirstName').value.trim();
   const lastName=document.getElementById('editLastName').value.trim();
