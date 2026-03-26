@@ -45,7 +45,8 @@ button{font-family:var(--font-b);cursor:pointer;border:none;background:none;}a{t
 .role-badge.admin{background:rgba(108,61,204,.15);color:var(--primary);}.role-badge.user{background:var(--muted);color:var(--text2);}
 .btn-logout{display:flex;align-items:center;justify-content:center;gap:.45rem;padding:.45rem;border-radius:var(--rs);color:var(--danger);font-size:.78rem;font-weight:600;transition:var(--tr);}
 .btn-logout:hover{background:rgba(239,68,68,.08);}.btn-logout svg{width:.85rem;height:.85rem;}
-.sidebar-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);opacity:0;transition:opacity var(--tr);}.sidebar-overlay.show{opacity:1;}
+.sidebar-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);opacity:0;transition:opacity var(--tr);}.sidebar-overlay{pointer-events:none;}
+.sidebar-overlay.show{opacity:1;pointer-events:auto;}
 .topbar{display:none;height:var(--topbar-h);background:var(--surface);border-bottom:1px solid var(--border);align-items:center;gap:.75rem;padding:0 1rem;position:fixed;top:0;left:0;right:0;z-index:180;}
 .topbar-title{font-family:var(--font-d);font-weight:800;font-size:.85rem;flex:1;}
 .btn-menu{width:2.2rem;height:2.2rem;border-radius:var(--rs);background:var(--card);display:grid;place-items:center;transition:var(--tr);}.btn-menu:hover{background:var(--muted);}.btn-menu svg{width:1.1rem;height:1.1rem;}
