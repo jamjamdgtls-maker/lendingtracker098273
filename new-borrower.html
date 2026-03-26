@@ -491,7 +491,7 @@ input,select,textarea{font-family:var(--font-b);}
 import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signOut, onAuthStateChanged }
                              from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, getDocs, addDoc, getDoc, doc, serverTimestamp }
+import { getFirestore, collection, getDocs, addDoc, getDoc, doc, setDoc, runTransaction, serverTimestamp }
                              from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig={apiKey:"AIzaSyBjYXRXK2lGBdUiWku1rae7MTpYl3bl0hw",authDomain:"lending-management-app-460f5.firebaseapp.com",projectId:"lending-management-app-460f5",storageBucket:"lending-management-app-460f5.firebasestorage.app",messagingSenderId:"167550754445",appId:"1:167550754445:web:e1548d3b0f52b751ed0cc4"};
@@ -552,15 +552,44 @@ function loadDropdownLists(){
 /* ══════════════════════════════════════════
    NEXT CLIENT NUMBER
 ══════════════════════════════════════════ */
-let nextCNNum=1;
-async function loadNextCN(){
-  try{
-    const snap=await getDocs(collection(db,'borrowers'));
-    const nums=snap.docs.map(d=>parseInt((d.data().clientNumber||'CN000000').replace('CN',''))||0);
-    nextCNNum=(Math.max(0,...nums))+1;
-    document.getElementById('cnPreview').textContent=`CN${String(nextCNNum).padStart(6,'0')}`;
-  }catch(e){
-    document.getElementById('cnPreview').textContent='CN000001';
+/* ── CN Counter helpers ──────────────────────────────────────
+   Uses counters/borrowers.lastCN in Firestore.
+   Counter is bootstrapped once from existing data, then only
+   ever increments — deletions never cause a number to recycle.
+──────────────────────────────────────────────────────────── */
+const cnCounterRef = doc(db, 'counters', 'borrowers');
+
+async function ensureCNCounter() {
+  const snap = await getDoc(cnCounterRef);
+  if (!snap.exists()) {
+    // First-time bootstrap: seed from the current max across all borrowers
+    const bSnap = await getDocs(collection(db, 'borrowers'));
+    const nums = bSnap.docs.map(d => parseInt((d.data().clientNumber || 'CN000000').replace('CN', '')) || 0);
+    const maxCN = Math.max(0, ...nums);
+    await setDoc(cnCounterRef, { lastCN: maxCN });
+  }
+}
+
+async function claimNextCN() {
+  // Atomically increment the counter and return the new CN string
+  const next = await runTransaction(db, async tx => {
+    const snap = await tx.get(cnCounterRef);
+    const next = (snap.data()?.lastCN || 0) + 1;
+    tx.set(cnCounterRef, { lastCN: next });
+    return next;
+  });
+  return `CN${String(next).padStart(6, '0')}`;
+}
+
+let nextCNNum = 1;
+async function loadNextCN() {
+  try {
+    await ensureCNCounter();
+    const snap = await getDoc(cnCounterRef);
+    nextCNNum = (snap.data()?.lastCN || 0) + 1;
+    document.getElementById('cnPreview').textContent = `CN${String(nextCNNum).padStart(6, '0')}`;
+  } catch(e) {
+    document.getElementById('cnPreview').textContent = 'CN??????';
   }
 }
 
@@ -645,10 +674,8 @@ document.getElementById('submitBtn').addEventListener('click',async()=>{
   btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .7s linear infinite;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Saving…`;
 
   try{
-    // Re-fetch max CN to be safe (concurrent saves)
-    const snap=await getDocs(collection(db,'borrowers'));
-    const nums=snap.docs.map(d=>parseInt((d.data().clientNumber||'CN000000').replace('CN',''))||0);
-    const cn=`CN${String((Math.max(0,...nums))+1).padStart(6,'0')}`;
+    // Atomically claim the next CN from the Firestore counter
+    const cn = await claimNextCN();
 
     const ref=await addDoc(collection(db,'borrowers'),{
       clientNumber:cn,
@@ -670,7 +697,6 @@ document.getElementById('submitBtn').addEventListener('click',async()=>{
     document.getElementById('successCN').textContent=cn;
     document.getElementById('successBanner').classList.add('show');
     toast(`Borrower ${firstName} ${lastName} registered! 🎉`,'success');
-    nextCNNum++;
 
   }catch(err){
     toast('Error saving borrower: '+err.message,'error');
