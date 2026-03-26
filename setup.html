@@ -76,7 +76,8 @@ input,select,textarea{font-family:var(--font-b);}
 .btn-logout:hover{background:rgba(239,68,68,.08);}
 .btn-logout svg{width:.85rem;height:.85rem;}
 .sidebar-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);opacity:0;transition:opacity var(--tr);}
-.sidebar-overlay.show{opacity:1;}
+.sidebar-overlay{pointer-events:none;}
+.sidebar-overlay.show{opacity:1;pointer-events:auto;}
 
 /* ── TOPBAR ── */
 .topbar{display:none;height:var(--topbar-h);background:var(--surface);border-bottom:1px solid var(--border);align-items:center;gap:.75rem;padding:0 1rem;position:fixed;top:0;left:0;right:0;z-index:180;}
