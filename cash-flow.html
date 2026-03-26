@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Cash Flow — Lending Management App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════ */
+:root{
+  --bg:#f4f6fb;--surface:#ffffff;--card:#eef0f5;
+  --primary:#6c3dcc;--primary-h:#5a2fb5;--primary-g:#8b5cf6;
+  --accent:#22c55e;--warn:#eab308;--danger:#ef4444;--muted:#e8eaee;
+  --text:#1a1a2e;--text2:#4b5280;--text3:#8892b0;
+  --border:rgba(108,61,204,.13);--glow:rgba(108,61,204,.15);
+  --sidebar-w:260px;--topbar-h:60px;
+  --r:1rem;--rs:.6rem;
+  --tr:.22s cubic-bezier(.4,0,.2,1);
+  --shadow:0 2px 16px rgba(108,61,204,.08),0 1px 3px rgba(0,0,0,.04);
+  --shadow-md:0 4px 28px rgba(108,61,204,.12),0 2px 6px rgba(0,0,0,.06);
+  --font-d:'Syne',sans-serif;--font-b:'Instrument Sans',sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#13111f;--surface:#1e1b30;--card:#272b3d;
+  --primary:#7c4dff;--primary-h:#6e3fef;--primary-g:#a78bfa;
+  --muted:#2e3350;--text:#f0edff;--text2:#a8b0d0;--text3:#6070a0;
+  --border:rgba(124,77,255,.18);--glow:rgba(124,77,255,.2);
+  --shadow:0 2px 16px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.2);
+  --shadow-md:0 4px 28px rgba(0,0,0,.42),0 2px 6px rgba(0,0,0,.25);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;}
+body{font-family:var(--font-b);background:var(--bg);color:var(--text);
+  min-height:100dvh;display:flex;overflow-x:hidden;
+  transition:background var(--tr),color var(--tr);}
+button{font-family:var(--font-b);cursor:pointer;border:none;background:none;}
+a{text-decoration:none;color:inherit;}
+
+/* ═══════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════ */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+  height:100dvh;position:fixed;left:0;top:0;z-index:200;
+  transition:transform var(--tr),background var(--tr);overflow:hidden;}
+.sidebar-header{padding:1.25rem 1.1rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sidebar-logo{display:flex;align-items:center;gap:.65rem;}
+.sidebar-logo-icon{width:2.1rem;height:2.1rem;border-radius:.55rem;
+  background:linear-gradient(135deg,var(--primary),var(--primary-g));
+  display:grid;place-items:center;flex-shrink:0;}
+.sidebar-logo-icon svg{width:1.1rem;height:1.1rem;color:#fff;}
+.sidebar-logo-title{font-family:var(--font-d);font-weight:800;font-size:.78rem;line-height:1.15;color:var(--text);}
+.sidebar-logo-sub{font-size:.62rem;color:var(--text3);font-weight:500;letter-spacing:.05em;margin-top:.1rem;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:.75rem .6rem;display:flex;flex-direction:column;gap:.15rem;}
+.sidebar-nav::-webkit-scrollbar{width:3px;}
+.sidebar-nav::-webkit-scrollbar-thumb{background:var(--muted);border-radius:10px;}
+.nav-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text3);padding:.5rem .65rem .25rem;margin-top:.35rem;}
+.nav-item{display:flex;align-items:center;gap:.6rem;padding:.55rem .7rem;border-radius:var(--rs);
+  color:var(--text2);font-size:.82rem;font-weight:500;transition:var(--tr);}
+.nav-item:hover{background:var(--muted);color:var(--text);}
+.nav-item.active{background:var(--primary);color:#fff;}
+.nav-item svg{width:1rem;height:1rem;flex-shrink:0;color:var(--text3);transition:var(--tr);}
+.nav-item:hover svg,.nav-item.active svg{color:currentColor;}
+.nav-item.sub{padding-left:1.9rem;font-size:.78rem;}
+.nav-item .badge-admin{margin-left:auto;font-size:.55rem;font-weight:700;
+  background:var(--primary);color:#fff;padding:.1rem .35rem;border-radius:100px;}
+.sidebar-footer{padding:.75rem .6rem;border-top:1px solid var(--border);
+  display:flex;flex-direction:column;gap:.5rem;flex-shrink:0;}
+.theme-row{display:flex;align-items:center;justify-content:space-between;padding:.35rem .5rem;}
+.theme-label{font-size:.75rem;color:var(--text2);font-weight:500;display:flex;align-items:center;gap:.4rem;}
+.theme-label svg{width:.9rem;height:.9rem;}
+.theme-switch{width:2.4rem;height:1.3rem;border-radius:100px;background:var(--muted);
+  border:1.5px solid var(--border);position:relative;transition:var(--tr);cursor:pointer;}
+.theme-switch.on{background:var(--primary);border-color:var(--primary);}
+.theme-switch::after{content:'';position:absolute;top:2px;left:2px;
+  width:calc(1.3rem - 8px);height:calc(1.3rem - 8px);background:#fff;border-radius:50%;transition:var(--tr);}
+.theme-switch.on::after{transform:translateX(1.1rem);}
+.date-widget{padding:.4rem .5rem;background:var(--card);border-radius:var(--rs);
+  font-size:.72rem;color:var(--text2);text-align:center;font-weight:500;}
+.user-row{display:flex;align-items:center;gap:.55rem;padding:.35rem .5rem;}
+.user-avatar{width:1.8rem;height:1.8rem;border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--primary-g));
+  display:grid;place-items:center;font-size:.7rem;font-weight:700;color:#fff;
+  flex-shrink:0;overflow:hidden;}
+.user-avatar img{width:100%;height:100%;object-fit:cover;}
+.user-name{font-size:.75rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-email{font-size:.62rem;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.role-badge{font-size:.55rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  padding:.15rem .4rem;border-radius:100px;flex-shrink:0;}
+.role-badge.admin{background:rgba(108,61,204,.15);color:var(--primary);}
+.role-badge.user{background:var(--muted);color:var(--text2);}
+.btn-logout{display:flex;align-items:center;justify-content:center;gap:.45rem;padding:.45rem;
+  border-radius:var(--rs);color:var(--danger);font-size:.78rem;font-weight:600;transition:var(--tr);}
+.btn-logout:hover{background:rgba(239,68,68,.08);}
+.btn-logout svg{width:.85rem;height:.85rem;}
+.sidebar-overlay{display:none;position:fixed;inset:0;z-index:199;
+  background:rgba(0,0,0,.45);backdrop-filter:blur(2px);opacity:0;transition:opacity var(--tr);}
+.sidebar-overlay.show{opacity:1;}
+
+/* ═══════════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════════ */
+.topbar{display:none;height:var(--topbar-h);background:var(--surface);
+  border-bottom:1px solid var(--border);align-items:center;gap:.75rem;padding:0 1rem;
+  position:fixed;top:0;left:0;right:0;z-index:180;}
+.topbar-title{font-family:var(--font-d);font-weight:800;font-size:.85rem;flex:1;}
+.btn-menu{width:2.2rem;height:2.2rem;border-radius:var(--rs);background:var(--card);
+  display:grid;place-items:center;transition:var(--tr);}
+.btn-menu:hover{background:var(--muted);}
+.btn-menu svg{width:1.1rem;height:1.1rem;}
+
+/* ═══════════════════════════════════════════
+   MAIN
+═══════════════════════════════════════════ */
+.main{margin-left:var(--sidebar-w);flex:1;min-width:0;display:flex;flex-direction:column;}
+.main-inner{padding:1.75rem 1.75rem 3rem;flex:1;}
+
+/* ═══════════════════════════════════════════
+   PAGE HEADER
+═══════════════════════════════════════════ */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;
+  gap:1rem;margin-bottom:1.75rem;flex-wrap:wrap;}
+.page-title{font-family:var(--font-d);font-weight:800;font-size:1.5rem;color:var(--text);line-height:1.2;}
+.page-subtitle{font-size:.8rem;color:var(--text3);margin-top:.25rem;font-weight:500;}
+.filters-row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;}
+.filter-select{
+  padding:.5rem .85rem;border-radius:var(--rs);border:1.5px solid var(--border);
+  background:var(--surface);color:var(--text);font-size:.82rem;
+  font-family:var(--font-b);font-weight:500;transition:var(--tr);cursor:pointer;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238892b0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .65rem center;padding-right:2rem;
+}
+.filter-select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--glow);}
+
+/* ═══════════════════════════════════════════
+   NET FLOW BANNER
+═══════════════════════════════════════════ */
+.net-banner{
+  border-radius:var(--r);padding:1.25rem 1.5rem;
+  margin-bottom:1.5rem;display:flex;align-items:center;gap:1.5rem;
+  flex-wrap:wrap;position:relative;overflow:hidden;
+  animation:slideDown .5s cubic-bezier(.34,1.26,.64,1) both;
+  border:1px solid var(--border);background:var(--surface);
+  box-shadow:var(--shadow-md);
+}
+.net-banner::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(108,61,204,.06),rgba(139,92,246,.03));
+  pointer-events:none;
+}
+.net-banner-divider{width:1px;height:3rem;background:var(--border);flex-shrink:0;}
+.net-banner-item{display:flex;flex-direction:column;gap:.2rem;position:relative;}
+.net-banner-label{font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);}
+.net-banner-value{font-family:var(--font-d);font-weight:800;font-size:1.35rem;line-height:1;}
+.net-banner-sub{font-size:.7rem;color:var(--text3);font-weight:500;}
+.nv-green{color:#22c55e;}
+.nv-amber{color:#eab308;}
+.nv-purple{color:var(--primary);}
+.nv-positive{color:#22c55e;}
+.nv-negative{color:var(--danger);}
+.flow-arrow{
+  font-size:1.5rem;animation:arrowPulse 2s ease-in-out infinite;flex-shrink:0;
+}
+@keyframes arrowPulse{0%,100%{opacity:1;transform:translateX(0);}50%{opacity:.5;transform:translateX(3px);}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-12px);}to{opacity:1;transform:none;}}
+
+/* ═══════════════════════════════════════════
+   SUMMARY CARDS
+═══════════════════════════════════════════ */
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;}
+.summary-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:1.4rem 1.35rem;box-shadow:var(--shadow);transition:var(--tr);
+  position:relative;overflow:hidden;
+  animation:cardIn .5s cubic-bezier(.34,1.26,.64,1) both;
+}
+.summary-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.summary-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  border-radius:var(--r) var(--r) 0 0;}
+.sc-green::before{background:linear-gradient(90deg,#22c55e,#86efac);}
+.sc-amber::before{background:linear-gradient(90deg,#eab308,#fde047);}
+.summary-card:nth-child(1){animation-delay:.05s;}
+.summary-card:nth-child(2){animation-delay:.13s;}
+@keyframes cardIn{from{opacity:0;transform:translateY(16px) scale(.97);}to{opacity:1;transform:none;}}
+
+.sc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem;gap:.5rem;}
+.sc-icon{width:2.6rem;height:2.6rem;border-radius:.7rem;display:grid;place-items:center;flex-shrink:0;}
+.sc-icon svg{width:1.25rem;height:1.25rem;}
+.ic-green{background:rgba(34,197,94,.12);color:#22c55e;}
+.ic-amber{background:rgba(234,179,8,.12);color:#eab308;}
+.sc-direction-tag{
+  display:inline-flex;align-items:center;gap:.3rem;
+  padding:.2rem .6rem;border-radius:100px;font-size:.65rem;font-weight:700;letter-spacing:.04em;
+}
+.tag-in{background:rgba(34,197,94,.1);color:#22c55e;border:1px solid rgba(34,197,94,.2);}
+.tag-out{background:rgba(234,179,8,.1);color:#d97706;border:1px solid rgba(234,179,8,.2);}
+.sc-label{font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:.35rem;}
+.sc-value{font-family:var(--font-d);font-weight:800;font-size:1.6rem;line-height:1;}
+.sc-meta{display:flex;align-items:center;gap:.75rem;margin-top:.5rem;flex-wrap:wrap;}
+.sc-meta-item{font-size:.72rem;color:var(--text3);font-weight:500;
+  display:flex;align-items:center;gap:.25rem;}
+.sc-meta-item svg{width:.75rem;height:.75rem;}
+
+/* ═══════════════════════════════════════════
+   CHART SECTION
+═══════════════════════════════════════════ */
+.chart-section{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  box-shadow:var(--shadow);margin-bottom:1.5rem;overflow:hidden;
+  animation:cardIn .5s .22s both;
+}
+.chart-header{padding:1rem 1.4rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;}
+.chart-title{font-family:var(--font-d);font-weight:700;font-size:.92rem;color:var(--text);}
+.chart-legend{display:flex;gap:1rem;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:.35rem;font-size:.72rem;color:var(--text2);font-weight:500;}
+.legend-dot{width:.55rem;height:.55rem;border-radius:50%;}
+.chart-body{padding:1.25rem 1.4rem;}
+.chart-canvas-wrap{position:relative;height:220px;}
+
+/* ═══════════════════════════════════════════
+   TWO-COLUMN TABLE LAYOUT
+═══════════════════════════════════════════ */
+.tables-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+.table-section{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  box-shadow:var(--shadow);overflow:hidden;
+  animation:cardIn .5s cubic-bezier(.34,1.26,.64,1) both;
+}
+.table-section:nth-child(1){animation-delay:.28s;}
+.table-section:nth-child(2){animation-delay:.35s;}
+.table-head{padding:.85rem 1.2rem;
+  display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;}
+.th-payments{background:linear-gradient(90deg,var(--primary),var(--primary-g));}
+.th-disbursements{background:linear-gradient(90deg,#b45309,#eab308);}
+.table-head-title{font-family:var(--font-d);font-weight:700;font-size:.88rem;color:#fff;}
+.table-head-sub{font-size:.7rem;color:rgba(255,255,255,.72);}
+.table-scroll{overflow-x:auto;max-height:400px;overflow-y:auto;}
+.table-scroll::-webkit-scrollbar{width:4px;}
+.table-scroll::-webkit-scrollbar-thumb{background:var(--muted);border-radius:10px;}
+table{width:100%;border-collapse:collapse;min-width:280px;}
+th{font-size:.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--text3);padding:.6rem 1rem;text-align:left;
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:var(--surface);z-index:1;}
+td{font-size:.8rem;padding:.65rem 1rem;border-bottom:1px solid var(--border);color:var(--text2);
+  vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--card);}
+.td-name{font-weight:600;color:var(--text);}
+.td-mono{font-family:monospace;font-size:.75rem;}
+.td-amount-green{font-weight:700;font-family:var(--font-d);color:#22c55e;}
+.td-amount-amber{font-weight:700;font-family:var(--font-d);color:#d97706;}
+.td-date{font-size:.75rem;color:var(--text3);}
+.empty-row td{text-align:center;padding:2rem 1rem;color:var(--text3);font-size:.8rem;}
+
+/* ═══════════════════════════════════════════
+   SKELETON
+═══════════════════════════════════════════ */
+.skel{background:linear-gradient(90deg,var(--muted) 25%,var(--card) 50%,var(--muted) 75%);
+  background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:.4rem;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+.toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;
+  display:flex;flex-direction:column;gap:.5rem;pointer-events:none;}
+.toast{padding:.65rem 1.1rem;border-radius:var(--rs);font-size:.8rem;font-weight:600;
+  color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.25);animation:toastIn .3s ease both;
+  pointer-events:auto;max-width:300px;}
+.toast-success{background:var(--accent);}
+.toast-error{background:var(--danger);}
+.toast-info{background:var(--primary);}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px) scale(.92);}to{opacity:1;transform:none;}}
+@keyframes toastOut{from{opacity:1;}to{opacity:0;transform:translateY(8px) scale(.92);}}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:960px){
+  .tables-grid{grid-template-columns:1fr;}
+  .summary-grid{grid-template-columns:1fr;}
+}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay{display:block;}
+  .topbar{display:flex;}
+  .main{margin-left:0;padding-top:var(--topbar-h);}
+  .main-inner{padding:1.25rem 1rem 3rem;}
+  .page-header{flex-direction:column;align-items:flex-start;}
+  .net-banner{gap:1rem;}
+  .net-banner-divider{display:none;}
+}
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ═══════════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <div>
+        <div class="sidebar-logo-title">LENDING MANAGEMENT</div>
+        <div class="sidebar-logo-sub">Loan Management System</div>
+      </div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <span class="nav-label">Overview</span>
+    <a class="nav-item" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard Summary</a>
+    <a class="nav-item sub" href="monthly-profit.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Monthly Profit</a>
+    <a class="nav-item sub" href="past-due.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Past Due</a>
+    <a class="nav-item sub active" href="cash-flow.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Cash Flow</a>
+    <span class="nav-label">Clients & Loans</span>
+    <a class="nav-item" href="client-loan-summary.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Client Loan Summary</a>
+    <a class="nav-item" href="loan-schedule.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Loan Schedule</a>
+    <a class="nav-item" href="payment-data.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payment Data</a>
+    <a class="nav-item" href="loan-data.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Loan Data</a>
+    <a class="nav-item" href="client-list.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Client List</a>
+    <span class="nav-label">Settings</span>
+    <a class="nav-item" href="setup.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Setup</a>
+    <a class="nav-item admin-only" href="user-management.html" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>User Management<span class="badge-admin">ADMIN</span></a>
+    <a class="nav-item admin-only" href="list-management.html" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>List Management<span class="badge-admin">ADMIN</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="theme-row">
+      <span class="theme-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Dark Mode
+      </span>
+      <div class="theme-switch" id="themeSwitch"></div>
+    </div>
+    <div class="date-widget" id="dateWidget">—</div>
+    <div class="user-row">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div style="flex:1;min-width:0;">
+        <div class="user-name" id="userName">Loading…</div>
+        <div class="user-email" id="userEmail"></div>
+      </div>
+      <span class="role-badge" id="roleBadge">—</span>
+    </div>
+    <button class="btn-logout" id="logoutBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out
+    </button>
+  </div>
+</aside>
+
+<!-- Mobile Topbar -->
+<div class="topbar" id="topbar">
+  <button class="btn-menu" id="menuBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <span class="topbar-title">Cash Flow</span>
+  <button class="btn-menu" id="menuThemeBtn">
+    <svg id="topIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg id="topIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN
+═══════════════════════════════════════════ -->
+<main class="main">
+  <div class="main-inner">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Cash Flow</h1>
+        <p class="page-subtitle">Track money in (collections) vs money out (disbursements)</p>
+      </div>
+      <div class="filters-row">
+        <select class="filter-select" id="filterYear">
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
+          <option value="2026" selected>2026</option>
+        </select>
+        <select class="filter-select" id="filterMonth">
+          <option value="all">All Months</option>
+          <option value="0">January</option><option value="1">February</option>
+          <option value="2">March</option><option value="3">April</option>
+          <option value="4">May</option><option value="5">June</option>
+          <option value="6">July</option><option value="7">August</option>
+          <option value="8">September</option><option value="9">October</option>
+          <option value="10">November</option><option value="11">December</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Net Flow Banner -->
+    <div class="net-banner" id="netBanner">
+      <div class="net-banner-item">
+        <div class="net-banner-label">Cash In</div>
+        <div class="net-banner-value nv-green" id="bannerIn">
+          <div class="skel" style="height:1.5rem;width:9rem;"></div>
+        </div>
+        <div class="net-banner-sub" id="bannerInSub">— transactions</div>
+      </div>
+      <div class="net-banner-divider"></div>
+      <div class="flow-arrow">→</div>
+      <div class="net-banner-divider"></div>
+      <div class="net-banner-item">
+        <div class="net-banner-label">Cash Out</div>
+        <div class="net-banner-value nv-amber" id="bannerOut">
+          <div class="skel" style="height:1.5rem;width:9rem;"></div>
+        </div>
+        <div class="net-banner-sub" id="bannerOutSub">— disbursements</div>
+      </div>
+      <div class="net-banner-divider"></div>
+      <div class="flow-arrow">=</div>
+      <div class="net-banner-divider"></div>
+      <div class="net-banner-item">
+        <div class="net-banner-label">Net Flow</div>
+        <div class="net-banner-value" id="bannerNet">
+          <div class="skel" style="height:1.5rem;width:9rem;"></div>
+        </div>
+        <div class="net-banner-sub" id="bannerNetSub">In − Out</div>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+      <div class="summary-card sc-green">
+        <div class="sc-top">
+          <div class="sc-icon ic-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 11 21 7 17 3"/><line x1="21" y1="7" x2="9" y2="7"/><polyline points="7 21 3 17 7 13"/><line x1="15" y1="17" x2="3" y2="17"/></svg>
+          </div>
+          <span class="sc-direction-tag tag-in">↓ IN</span>
+        </div>
+        <div class="sc-label">Total Payments Collected</div>
+        <div class="sc-value nv-green" id="sumIn">
+          <div class="skel" style="height:1.75rem;width:70%;"></div>
+        </div>
+        <div class="sc-meta">
+          <span class="sc-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            <span id="sumInCount">—</span> transactions
+          </span>
+        </div>
+      </div>
+      <div class="summary-card sc-amber">
+        <div class="sc-top">
+          <div class="sc-icon ic-amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+          </div>
+          <span class="sc-direction-tag tag-out">↑ OUT</span>
+        </div>
+        <div class="sc-label">Total Disbursements</div>
+        <div class="sc-value nv-amber" id="sumOut">
+          <div class="skel" style="height:1.75rem;width:70%;"></div>
+        </div>
+        <div class="sc-meta">
+          <span class="sc-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span id="sumOutCount">—</span> loans released
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <span class="chart-title">Cash Flow Over Time — <span id="chartLabel">2026</span></span>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#22c55e;"></div>Payments In</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#eab308;"></div>Disbursements Out</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--primary);border-radius:2px;width:.9rem;height:2px;"></div>Net Flow</div>
+        </div>
+      </div>
+      <div class="chart-body">
+        <div class="chart-canvas-wrap">
+          <canvas id="cashFlowChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payments & Disbursements Tables side by side -->
+    <div class="tables-grid">
+
+      <!-- Payments IN -->
+      <div class="table-section">
+        <div class="table-head th-payments">
+          <span class="table-head-title">Recent Payments</span>
+          <span class="table-head-sub" id="payTableSub">—</span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Loan ID</th>
+                <th>Borrower</th>
+                <th>Amount</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="paymentsTbody">
+              <tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text3);">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Disbursements OUT -->
+      <div class="table-section">
+        <div class="table-head th-disbursements">
+          <span class="table-head-title">Disbursements</span>
+          <span class="table-head-sub" id="disbTableSub">—</span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Loan ID</th>
+                <th>Borrower</th>
+                <th>Amount</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="disbTbody">
+              <tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text3);">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /tables-grid -->
+
+  </div>
+</main>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<!-- ═══════════════════════════════════════════
+     FIREBASE + LOGIC
+═══════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signOut, onAuthStateChanged }
+                          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, getDocs, getDoc, doc }
+                          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBjYXRXK2lGBdUiWku1rae7MTpYl3bl0hw",
+  authDomain:"lending-management-app-460f5.firebaseapp.com",
+  projectId:"lending-management-app-460f5",
+  storageBucket:"lending-management-app-460f5.firebasestorage.app",
+  messagingSenderId:"167550754445",
+  appId:"1:167550754445:web:e1548d3b0f52b751ed0cc4"
+};
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+/* ── Auth Guard ── */
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location.href='login.html'; return; }
+  let sess = sessionStorage.getItem('lma_user');
+  if (!sess) {
+    const snap = await getDoc(doc(db,'user_roles',user.uid));
+    const role = snap.exists() ? snap.data().role : 'pending';
+    if (role==='pending') { window.location.href='login.html'; return; }
+    sessionStorage.setItem('lma_user', JSON.stringify({
+      uid:user.uid,email:user.email,displayName:user.displayName,
+      photoURL:user.photoURL,role
+    }));
+  }
+  const info = JSON.parse(sessionStorage.getItem('lma_user'));
+  if (info.role==='pending') { window.location.href='login.html'; return; }
+  initUI(info);
+  loadData();
+});
+
+/* ── Helpers ── */
+const fmt = n => new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP',minimumFractionDigits:2}).format(n||0);
+const fmtDate = d => {
+  if (!d) return '—';
+  return d.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});
+};
+const toDate = ts => {
+  if (!ts) return null;
+  if (ts.toDate) return ts.toDate();
+  return new Date(ts);
+};
+const toast = (msg,type='info',dur=3000) => {
+  const el=document.createElement('div'); el.className=`toast toast-${type}`; el.textContent=msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(()=>{el.style.animation='toastOut .3s ease forwards';setTimeout(()=>el.remove(),300);},dur);
+};
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS_FULL  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+/* ── UI Init ── */
+function initUI(info) {
+  document.getElementById('userName').textContent  = info.displayName||'User';
+  document.getElementById('userEmail').textContent = info.email||'';
+  const rb = document.getElementById('roleBadge');
+  rb.textContent=info.role; rb.className=`role-badge ${info.role}`;
+  const av = document.getElementById('userAvatar');
+  if(info.photoURL) av.innerHTML=`<img src="${info.photoURL}" alt="avatar"/>`;
+  else av.textContent=(info.displayName||'U')[0].toUpperCase();
+  if(info.role==='admin') document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
+}
+
+/* ── Date widget ── */
+const now = new Date();
+document.getElementById('dateWidget').textContent =
+  `${MONTHS_FULL[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+
+/* ── Logout ── */
+document.getElementById('logoutBtn').addEventListener('click',async()=>{
+  await signOut(auth); sessionStorage.removeItem('lma_user');
+  window.location.href='login.html';
+});
+
+/* ── Theme ── */
+(function(){
+  const root=document.documentElement, sw=document.getElementById('themeSwitch');
+  const sunT=document.getElementById('topIconSun'), moonT=document.getElementById('topIconMoon');
+  function apply(t){
+    root.setAttribute('data-theme',t); localStorage.setItem('lma_theme',t);
+    sw.classList.toggle('on',t==='dark');
+    if(sunT){sunT.style.display=t==='dark'?'none':''; moonT.style.display=t==='dark'?'':'none';}
+    if(window._cashChart) updateChartColors();
+  }
+  apply(localStorage.getItem('lma_theme')||'light');
+  sw.addEventListener('click',()=>apply(root.getAttribute('data-theme')==='dark'?'light':'dark'));
+  document.getElementById('menuThemeBtn')?.addEventListener('click',()=>
+    apply(root.getAttribute('data-theme')==='dark'?'light':'dark'));
+})();
+
+/* ── Sidebar Mobile ── */
+const sidebar=document.getElementById('sidebar'), overlay=document.getElementById('sidebarOverlay');
+document.getElementById('menuBtn')?.addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('show');});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('show');});
+
+/* ══════════════════════════════════════════
+   DATA
+══════════════════════════════════════════ */
+let allPayments=[], allLoans=[], borrowerMap={};
+
+async function loadData() {
+  try {
+    const [pSnap, lSnap, bSnap] = await Promise.all([
+      getDocs(collection(db,'payments')),
+      getDocs(collection(db,'loans')),
+      getDocs(collection(db,'borrowers'))
+    ]);
+    allPayments = pSnap.docs.map(d=>({id:d.id,...d.data()}));
+    allLoans    = lSnap.docs.map(d=>({id:d.id,...d.data()}));
+    const borrowers = bSnap.docs.map(d=>({id:d.id,...d.data()}));
+    borrowerMap = Object.fromEntries(borrowers.map(b=>[b.id,b]));
+    renderAll();
+  } catch(err){
+    toast('Error loading data: '+err.message,'error');
+    console.error(err);
+  }
+}
+
+/* ── Filters ── */
+document.getElementById('filterYear').addEventListener('change', renderAll);
+document.getElementById('filterMonth').addEventListener('change', renderAll);
+
+function getFilters(){
+  return {
+    year:  parseInt(document.getElementById('filterYear').value),
+    month: document.getElementById('filterMonth').value
+  };
+}
+
+/* ── Render ── */
+function renderAll(){
+  const {year, month} = getFilters();
+  const isAll = month === 'all';
+  const mIdx  = isAll ? -1 : parseInt(month);
+
+  const inPeriod = (ts, fallbackTs) => {
+    const d = toDate(ts || fallbackTs);
+    if (!d) return false;
+    if (d.getFullYear() !== year) return false;
+    if (!isAll && d.getMonth() !== mIdx) return false;
+    return true;
+  };
+
+  const filtPay  = allPayments.filter(p => inPeriod(p.paymentDate, p.createdAt));
+  const filtLoan = allLoans.filter(l => inPeriod(l.disbursementDate, l.startDate));
+
+  /* Totals */
+  const totalIn  = filtPay.reduce((s,p)=>s+(p.amountPaid||0),0);
+  const totalOut = filtLoan.reduce((s,l)=>s+(l.principal||0),0);
+  const netFlow  = totalIn - totalOut;
+
+  const periodLabel = isAll ? `${year}` : `${MONTHS_FULL[mIdx]} ${year}`;
+  document.getElementById('chartLabel').textContent = periodLabel;
+
+  /* Banner */
+  document.getElementById('bannerIn').textContent      = fmt(totalIn);
+  document.getElementById('bannerInSub').textContent   = `${filtPay.length} transaction${filtPay.length!==1?'s':''}`;
+  document.getElementById('bannerOut').textContent     = fmt(totalOut);
+  document.getElementById('bannerOutSub').textContent  = `${filtLoan.length} disbursement${filtLoan.length!==1?'s':''}`;
+  const netEl = document.getElementById('bannerNet');
+  netEl.textContent = fmt(Math.abs(netFlow));
+  netEl.className   = `net-banner-value ${netFlow >= 0 ? 'nv-positive' : 'nv-negative'}`;
+  document.getElementById('bannerNetSub').textContent =
+    netFlow >= 0 ? '▲ Positive cash flow' : '▼ Negative cash flow';
+
+  /* Summary Cards */
+  document.getElementById('sumIn').textContent        = fmt(totalIn);
+  document.getElementById('sumInCount').textContent   = filtPay.length;
+  document.getElementById('sumOut').textContent       = fmt(totalOut);
+  document.getElementById('sumOutCount').textContent  = filtLoan.length;
+
+  /* Tables */
+  const sortedPay = [...filtPay].sort((a,b)=>{
+    const da=toDate(a.paymentDate||a.createdAt), db=toDate(b.paymentDate||b.createdAt);
+    return (db||0)-(da||0);
+  });
+  const sortedLoan = [...filtLoan].sort((a,b)=>{
+    const da=toDate(a.disbursementDate||a.startDate), db=toDate(b.disbursementDate||b.startDate);
+    return (db||0)-(da||0);
+  });
+
+  renderPaymentsTable(sortedPay);
+  renderDisbTable(sortedLoan);
+
+  /* Chart */
+  renderChart(filtPay, filtLoan, isAll, mIdx, year);
+}
+
+/* ── Payments Table ── */
+function renderPaymentsTable(rows){
+  const tb = document.getElementById('paymentsTbody');
+  document.getElementById('payTableSub').textContent = `${rows.length} record${rows.length!==1?'s':''}`;
+  if(!rows.length){
+    tb.innerHTML=`<tr class="empty-row"><td colspan="4">No payments in this period</td></tr>`;
+    return;
+  }
+  tb.innerHTML = rows.map(p=>{
+    const loanObj = allLoans.find(l=>l.id===p.loanId);
+    const b = borrowerMap[p.borrowerId];
+    return `<tr>
+      <td class="td-mono">${loanObj?.loanNumber||p.loanId||'—'}</td>
+      <td class="td-name">${b?`${b.firstName} ${b.lastName}`:'—'}</td>
+      <td class="td-amount-green">${fmt(p.amountPaid)}</td>
+      <td class="td-date">${fmtDate(toDate(p.paymentDate||p.createdAt))}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── Disbursements Table ── */
+function renderDisbTable(rows){
+  const tb = document.getElementById('disbTbody');
+  document.getElementById('disbTableSub').textContent = `${rows.length} record${rows.length!==1?'s':''}`;
+  if(!rows.length){
+    tb.innerHTML=`<tr class="empty-row"><td colspan="4">No disbursements in this period</td></tr>`;
+    return;
+  }
+  tb.innerHTML = rows.map(l=>{
+    const b = borrowerMap[l.borrowerId];
+    return `<tr>
+      <td class="td-mono">${l.loanNumber||l.id||'—'}</td>
+      <td class="td-name">${b?`${b.firstName} ${b.lastName}`:'—'}</td>
+      <td class="td-amount-amber">${fmt(l.principal)}</td>
+      <td class="td-date">${fmtDate(toDate(l.disbursementDate||l.startDate))}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── Chart ── */
+let chartInst = null;
+
+function getColors(){
+  const dark = document.documentElement.getAttribute('data-theme')==='dark';
+  return {
+    grid:  dark?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)',
+    tick:  dark?'#6070a0':'#8892b0',
+    tipBg: dark?'#272b3d':'#ffffff',
+    tipTx: dark?'#f0edff':'#1a1a2e',
+  };
+}
+
+function renderChart(payments, loans, isAll, mIdx, year){
+  const ctx = document.getElementById('cashFlowChart').getContext('2d');
+  const c   = getColors();
+
+  let labels=[], inData=[], outData=[], netData=[];
+
+  if (isAll){
+    // Aggregate by month
+    const byMonth = {};
+    for(let m=0;m<12;m++) byMonth[m]={in:0,out:0};
+    payments.forEach(p=>{
+      const d=toDate(p.paymentDate||p.createdAt);
+      if(d) byMonth[d.getMonth()].in += p.amountPaid||0;
+    });
+    loans.forEach(l=>{
+      const d=toDate(l.disbursementDate||l.startDate);
+      if(d) byMonth[d.getMonth()].out += l.principal||0;
+    });
+    for(let m=0;m<12;m++){
+      labels.push(MONTHS_SHORT[m]);
+      inData.push(byMonth[m].in);
+      outData.push(byMonth[m].out);
+      netData.push(byMonth[m].in - byMonth[m].out);
+    }
+  } else {
+    // Single month — aggregate by day-of-week groups or just show totals
+    // Group by day of month
+    const days = {};
+    payments.forEach(p=>{
+      const d=toDate(p.paymentDate||p.createdAt);
+      if(!d) return;
+      const day=d.getDate();
+      if(!days[day]) days[day]={in:0,out:0};
+      days[day].in += p.amountPaid||0;
+    });
+    loans.forEach(l=>{
+      const d=toDate(l.disbursementDate||l.startDate);
+      if(!d) return;
+      const day=d.getDate();
+      if(!days[day]) days[day]={in:0,out:0};
+      days[day].out += l.principal||0;
+    });
+    // Dayseries for the month
+    const daysInMonth = new Date(year, mIdx+1, 0).getDate();
+    for(let d=1;d<=daysInMonth;d++){
+      labels.push(d);
+      inData.push(days[d]?.in||0);
+      outData.push(days[d]?.out||0);
+      netData.push((days[d]?.in||0)-(days[d]?.out||0));
+    }
+  }
+
+  if(chartInst){ chartInst.destroy(); chartInst=null; }
+
+  chartInst = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {
+          label:'Payments In',
+          data:inData,
+          backgroundColor:'rgba(34,197,94,.7)',
+          borderColor:'#22c55e',
+          borderWidth:1.5,
+          borderRadius:5,
+          borderSkipped:false,
+          order:2,
+        },
+        {
+          label:'Disbursements Out',
+          data:outData,
+          backgroundColor:'rgba(234,179,8,.65)',
+          borderColor:'#d97706',
+          borderWidth:1.5,
+          borderRadius:5,
+          borderSkipped:false,
+          order:2,
+        },
+        {
+          label:'Net Flow',
+          data:netData,
+          type:'line',
+          borderColor:'var(--primary)',
+          backgroundColor:'rgba(108,61,204,.1)',
+          borderWidth:2,
+          pointBackgroundColor:'var(--primary)',
+          pointRadius:3,
+          pointHoverRadius:5,
+          tension:.4,
+          fill:true,
+          order:1,
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:c.tipBg,
+          titleColor:c.tipTx,
+          bodyColor:c.tipTx,
+          borderColor:'rgba(108,61,204,.2)',
+          borderWidth:1,
+          padding:10,
+          callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`}
+        }
+      },
+      scales:{
+        x:{grid:{color:c.grid},ticks:{color:c.tick,font:{size:11,family:"'Instrument Sans',sans-serif"}}},
+        y:{
+          grid:{color:c.grid},
+          ticks:{
+            color:c.tick,font:{size:11,family:"'Instrument Sans',sans-serif"},
+            callback:v=>v>=1000000?'₱'+(v/1000000).toFixed(1)+'M':v>=1000?'₱'+(v/1000).toFixed(0)+'K':'₱'+v
+          },
+          beginAtZero:true
+        }
+      }
+    }
+  });
+  window._cashChart = chartInst;
+}
+
+function updateChartColors(){
+  if(!chartInst) return;
+  const c=getColors();
+  chartInst.options.scales.x.grid.color=c.grid;
+  chartInst.options.scales.x.ticks.color=c.tick;
+  chartInst.options.scales.y.grid.color=c.grid;
+  chartInst.options.scales.y.ticks.color=c.tick;
+  chartInst.options.plugins.tooltip.backgroundColor=c.tipBg;
+  chartInst.options.plugins.tooltip.titleColor=c.tipTx;
+  chartInst.options.plugins.tooltip.bodyColor=c.tipTx;
+  chartInst.update();
+}
+</script>
+
+<script>
+(function(){
+  const t=localStorage.getItem('lma_theme')||'light';
+  document.documentElement.setAttribute('data-theme',t);
+})();
+</script>
+</body>
+</html>

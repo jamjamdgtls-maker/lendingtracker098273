@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Payment Data — Lending Management App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f4f6fb;--surface:#ffffff;--card:#eef0f5;
+  --primary:#6c3dcc;--primary-h:#5a2fb5;--primary-g:#8b5cf6;
+  --accent:#22c55e;--warn:#eab308;--danger:#ef4444;--muted:#e8eaee;
+  --text:#1a1a2e;--text2:#4b5280;--text3:#8892b0;
+  --border:rgba(108,61,204,.13);--glow:rgba(108,61,204,.15);
+  --sidebar-w:260px;--topbar-h:60px;
+  --r:1rem;--rs:.6rem;
+  --tr:.22s cubic-bezier(.4,0,.2,1);
+  --shadow:0 2px 16px rgba(108,61,204,.08),0 1px 3px rgba(0,0,0,.04);
+  --shadow-md:0 4px 28px rgba(108,61,204,.12),0 2px 6px rgba(0,0,0,.06);
+  --font-d:'Syne',sans-serif;--font-b:'Instrument Sans',sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#13111f;--surface:#1e1b30;--card:#272b3d;
+  --primary:#7c4dff;--primary-h:#6e3fef;--primary-g:#a78bfa;
+  --muted:#2e3350;--text:#f0edff;--text2:#a8b0d0;--text3:#6070a0;
+  --border:rgba(124,77,255,.18);--glow:rgba(124,77,255,.2);
+  --shadow:0 2px 16px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.2);
+  --shadow-md:0 4px 28px rgba(0,0,0,.42),0 2px 6px rgba(0,0,0,.25);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;}
+body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height:100dvh;display:flex;overflow-x:hidden;transition:background var(--tr),color var(--tr);}
+button{font-family:var(--font-b);cursor:pointer;border:none;background:none;}
+a{text-decoration:none;color:inherit;}
+input,select,textarea{font-family:var(--font-b);}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100dvh;position:fixed;left:0;top:0;z-index:200;transition:transform var(--tr),background var(--tr);overflow:hidden;}
+.sidebar-header{padding:1.25rem 1.1rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sidebar-logo{display:flex;align-items:center;gap:.65rem;}
+.sidebar-logo-icon{width:2.1rem;height:2.1rem;border-radius:.55rem;background:linear-gradient(135deg,var(--primary),var(--primary-g));display:grid;place-items:center;flex-shrink:0;}
+.sidebar-logo-icon svg{width:1.1rem;height:1.1rem;color:#fff;}
+.sidebar-logo-title{font-family:var(--font-d);font-weight:800;font-size:.78rem;line-height:1.15;color:var(--text);}
+.sidebar-logo-sub{font-size:.62rem;color:var(--text3);font-weight:500;letter-spacing:.05em;margin-top:.1rem;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:.75rem .6rem;display:flex;flex-direction:column;gap:.15rem;}
+.sidebar-nav::-webkit-scrollbar{width:3px;}
+.sidebar-nav::-webkit-scrollbar-thumb{background:var(--muted);border-radius:10px;}
+.nav-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:.5rem .65rem .25rem;margin-top:.35rem;}
+.nav-item{display:flex;align-items:center;gap:.6rem;padding:.55rem .7rem;border-radius:var(--rs);color:var(--text2);font-size:.82rem;font-weight:500;transition:var(--tr);}
+.nav-item:hover{background:var(--muted);color:var(--text);}
+.nav-item.active{background:var(--primary);color:#fff;}
+.nav-item svg{width:1rem;height:1rem;flex-shrink:0;color:var(--text3);transition:var(--tr);}
+.nav-item:hover svg,.nav-item.active svg{color:currentColor;}
+.nav-item.sub{padding-left:1.9rem;font-size:.78rem;}
+.nav-item .badge-admin{margin-left:auto;font-size:.55rem;font-weight:700;background:var(--primary);color:#fff;padding:.1rem .35rem;border-radius:100px;}
+.sidebar-footer{padding:.75rem .6rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.5rem;flex-shrink:0;}
+.theme-row{display:flex;align-items:center;justify-content:space-between;padding:.35rem .5rem;}
+.theme-label{font-size:.75rem;color:var(--text2);font-weight:500;display:flex;align-items:center;gap:.4rem;}
+.theme-label svg{width:.9rem;height:.9rem;}
+.theme-switch{width:2.4rem;height:1.3rem;border-radius:100px;background:var(--muted);border:1.5px solid var(--border);position:relative;transition:var(--tr);cursor:pointer;}
+.theme-switch.on{background:var(--primary);border-color:var(--primary);}
+.theme-switch::after{content:'';position:absolute;top:2px;left:2px;width:calc(1.3rem - 8px);height:calc(1.3rem - 8px);background:#fff;border-radius:50%;transition:var(--tr);}
+.theme-switch.on::after{transform:translateX(1.1rem);}
+.date-widget{padding:.4rem .5rem;background:var(--card);border-radius:var(--rs);font-size:.72rem;color:var(--text2);text-align:center;font-weight:500;}
+.user-row{display:flex;align-items:center;gap:.55rem;padding:.35rem .5rem;}
+.user-avatar{width:1.8rem;height:1.8rem;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-g));display:grid;place-items:center;font-size:.7rem;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;}
+.user-avatar img{width:100%;height:100%;object-fit:cover;}
+.user-name{font-size:.75rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-email{font-size:.62rem;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.role-badge{font-size:.55rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:.15rem .4rem;border-radius:100px;flex-shrink:0;}
+.role-badge.admin{background:rgba(108,61,204,.15);color:var(--primary);}
+.role-badge.user{background:var(--muted);color:var(--text2);}
+.btn-logout{display:flex;align-items:center;justify-content:center;gap:.45rem;padding:.45rem;border-radius:var(--rs);color:var(--danger);font-size:.78rem;font-weight:600;transition:var(--tr);}
+.btn-logout:hover{background:rgba(239,68,68,.08);}
+.btn-logout svg{width:.85rem;height:.85rem;}
+.sidebar-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);opacity:0;transition:opacity var(--tr);}
+.sidebar-overlay.show{opacity:1;}
+
+/* ── TOPBAR ── */
+.topbar{display:none;height:var(--topbar-h);background:var(--surface);border-bottom:1px solid var(--border);align-items:center;gap:.75rem;padding:0 1rem;position:fixed;top:0;left:0;right:0;z-index:180;}
+.topbar-title{font-family:var(--font-d);font-weight:800;font-size:.85rem;flex:1;}
+.btn-menu{width:2.2rem;height:2.2rem;border-radius:var(--rs);background:var(--card);display:grid;place-items:center;transition:var(--tr);}
+.btn-menu:hover{background:var(--muted);}
+.btn-menu svg{width:1.1rem;height:1.1rem;}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar-w);flex:1;min-width:0;display:flex;flex-direction:column;}
+.main-inner{padding:1.75rem 1.75rem 3rem;flex:1;}
+
+/* ── PAGE HEADER ── */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.page-title{font-family:var(--font-d);font-weight:800;font-size:1.5rem;color:var(--text);}
+.page-subtitle{font-size:.8rem;color:var(--text3);margin-top:.25rem;font-weight:500;}
+
+/* ── TOTAL COLLECTED CARD ── */
+.total-card{
+  background:linear-gradient(135deg,var(--primary),var(--primary-g));
+  border-radius:var(--r);padding:1.35rem 1.5rem;margin-bottom:1.5rem;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;
+  box-shadow:0 6px 28px var(--glow);
+  animation:fadeUp .5s cubic-bezier(.34,1.26,.64,1) both;
+  position:relative;overflow:hidden;
+}
+.total-card::before{content:'';position:absolute;top:-40%;right:-5%;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none;}
+.total-card::after{content:'';position:absolute;bottom:-30%;left:10%;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none;}
+.tc-left{display:flex;align-items:center;gap:1rem;position:relative;}
+.tc-icon{width:3rem;height:3rem;border-radius:.8rem;background:rgba(255,255,255,.18);display:grid;place-items:center;}
+.tc-icon svg{width:1.4rem;height:1.4rem;color:#fff;}
+.tc-label{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.75);margin-bottom:.25rem;}
+.tc-value{font-family:var(--font-d);font-weight:800;font-size:1.85rem;color:#fff;line-height:1;}
+.tc-sub{font-size:.72rem;color:rgba(255,255,255,.7);margin-top:.2rem;}
+.tc-right{display:flex;gap:1.5rem;position:relative;}
+.tc-stat{text-align:center;}
+.tc-stat-val{font-family:var(--font-d);font-weight:800;font-size:1.15rem;color:#fff;}
+.tc-stat-lbl{font-size:.65rem;color:rgba(255,255,255,.65);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+/* ── FILTER BAR ── */
+.filter-bar{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:.85rem 1.1rem;margin-bottom:1.25rem;
+  display:flex;align-items:center;gap:.65rem;flex-wrap:wrap;
+  box-shadow:var(--shadow);
+  animation:fadeUp .5s .08s both;
+}
+.filter-label{font-size:.75rem;font-weight:700;color:var(--text2);white-space:nowrap;}
+.filter-input{
+  padding:.48rem .85rem;border-radius:var(--rs);border:1.5px solid var(--border);
+  background:var(--card);color:var(--text);font-size:.82rem;font-family:var(--font-b);
+  transition:var(--tr);min-width:160px;
+}
+.filter-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--glow);}
+.filter-select{
+  padding:.48rem .85rem;border-radius:var(--rs);border:1.5px solid var(--border);
+  background:var(--surface);color:var(--text);font-size:.82rem;font-family:var(--font-b);
+  font-weight:500;transition:var(--tr);cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238892b0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .65rem center;padding-right:2rem;
+}
+.filter-select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--glow);}
+.filter-spacer{flex:1;}
+.result-count{font-size:.78rem;color:var(--text3);font-weight:500;white-space:nowrap;}
+
+/* ── TABLE ── */
+.table-wrap{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  box-shadow:var(--shadow);overflow:hidden;
+  animation:fadeUp .5s .14s both;
+}
+.table-head{
+  padding:.9rem 1.35rem;
+  background:linear-gradient(90deg,var(--primary),var(--primary-g));
+  display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;
+}
+.th-title{font-family:var(--font-d);font-weight:700;font-size:.9rem;color:#fff;}
+.th-sub{font-size:.72rem;color:rgba(255,255,255,.72);}
+.table-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:780px;}
+th{
+  font-size:.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--text3);padding:.65rem 1.1rem;text-align:left;
+  border-bottom:1px solid var(--border);
+  cursor:pointer;user-select:none;white-space:nowrap;
+}
+th:hover{color:var(--primary);}
+th .sort-icon{display:inline-block;margin-left:.3rem;opacity:.4;font-size:.7rem;}
+th.sorted .sort-icon{opacity:1;color:var(--primary);}
+td{font-size:.8rem;padding:.72rem 1.1rem;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--card);}
+.td-name{font-weight:700;color:var(--text);}
+.td-mono{font-family:monospace;font-size:.76rem;}
+.td-green{color:#22c55e;font-weight:700;font-family:var(--font-d);}
+.td-amber{color:#d97706;font-weight:600;}
+.td-red{color:var(--danger);font-weight:600;font-family:var(--font-d);}
+.td-date{font-size:.76rem;}
+
+/* ── PAGINATION ── */
+.pagination{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.85rem 1.1rem;border-top:1px solid var(--border);
+  flex-wrap:wrap;gap:.75rem;
+}
+.pag-info{font-size:.75rem;color:var(--text3);font-weight:500;}
+.pag-controls{display:flex;gap:.4rem;align-items:center;}
+.pag-btn{
+  width:2rem;height:2rem;border-radius:var(--rs);
+  display:grid;place-items:center;font-size:.78rem;font-weight:600;
+  background:var(--card);color:var(--text2);border:1px solid var(--border);
+  transition:var(--tr);cursor:pointer;
+}
+.pag-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
+.pag-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.pag-btn:disabled{opacity:.4;cursor:not-allowed;}
+.pag-btn svg{width:.85rem;height:.85rem;}
+
+/* ── EDIT BUTTON ── */
+.btn-edit{
+  display:inline-flex;align-items:center;gap:.3rem;
+  padding:.25rem .65rem;border-radius:var(--rs);
+  background:rgba(108,61,204,.08);color:var(--primary);
+  border:1px solid rgba(108,61,204,.2);
+  font-size:.7rem;font-weight:600;transition:var(--tr);
+}
+.btn-edit:hover{background:var(--primary);color:#fff;}
+.btn-edit svg{width:.72rem;height:.72rem;}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:3.5rem 1rem;}
+.empty-icon{width:4rem;height:4rem;border-radius:50%;background:rgba(108,61,204,.08);border:2px solid rgba(108,61,204,.12);display:grid;place-items:center;margin:0 auto 1rem;}
+.empty-icon svg{width:1.75rem;height:1.75rem;color:var(--primary);opacity:.5;}
+.empty-title{font-family:var(--font-d);font-weight:700;font-size:.95rem;color:var(--text);margin-bottom:.3rem;}
+.empty-body{font-size:.8rem;color:var(--text3);}
+
+/* ── SKELETON ── */
+.skel{background:linear-gradient(90deg,var(--muted) 25%,var(--card) 50%,var(--muted) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:.4rem;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);display:grid;place-items:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity var(--tr);}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 8px 40px rgba(0,0,0,.25);width:100%;max-width:480px;max-height:90dvh;display:flex;flex-direction:column;transform:scale(.95) translateY(10px);transition:transform var(--tr);overflow:hidden;}
+.modal-overlay.open .modal{transform:none;}
+.modal-header{padding:1.1rem 1.35rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-title{font-family:var(--font-d);font-weight:800;font-size:.95rem;color:var(--text);}
+.modal-close{width:1.9rem;height:1.9rem;border-radius:50%;background:var(--muted);color:var(--text2);display:grid;place-items:center;transition:var(--tr);}
+.modal-close:hover{background:var(--danger);color:#fff;}
+.modal-close svg{width:.85rem;height:.85rem;}
+.modal-body{padding:1.2rem 1.35rem;overflow-y:auto;flex:1;}
+.modal-footer{padding:.9rem 1.35rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.65rem;flex-shrink:0;}
+.form-grid{display:grid;gap:.85rem;}
+.form-group{display:flex;flex-direction:column;gap:.32rem;}
+.form-group.span-2{grid-column:span 2;}
+.form-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);}
+.form-input{padding:.58rem .85rem;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:.85rem;font-family:var(--font-b);transition:var(--tr);}
+.form-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--glow);background:var(--surface);}
+.form-input:disabled{opacity:.5;cursor:not-allowed;}
+.chain-note{background:rgba(234,179,8,.06);border:1px solid rgba(234,179,8,.25);border-radius:var(--rs);padding:.65rem .9rem;font-size:.75rem;color:#92400e;display:flex;align-items:flex-start;gap:.5rem;margin-top:.5rem;}
+[data-theme="dark"] .chain-note{color:#fde047;}
+.chain-note svg{width:.9rem;height:.9rem;flex-shrink:0;margin-top:.1rem;}
+.calc-preview{background:rgba(108,61,204,.06);border:1px solid var(--border);border-radius:var(--rs);padding:.65rem .9rem;display:flex;justify-content:space-between;align-items:center;margin-top:.5rem;}
+.calc-preview-lbl{font-size:.75rem;color:var(--text2);}
+.calc-preview-val{font-family:var(--font-d);font-weight:700;color:var(--primary);}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:.45rem;padding:.55rem 1.1rem;border-radius:var(--rs);font-size:.82rem;font-weight:600;transition:var(--tr);white-space:nowrap;}
+.btn svg{width:.88rem;height:.88rem;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-h);box-shadow:0 4px 16px var(--glow);transform:translateY(-1px);}
+.btn-ghost{background:var(--card);color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--muted);}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none!important;}
+
+/* ── TOAST ── */
+.toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;pointer-events:none;}
+.toast{padding:.65rem 1.1rem;border-radius:var(--rs);font-size:.8rem;font-weight:600;color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.25);animation:toastIn .3s ease both;pointer-events:auto;max-width:300px;}
+.toast-success{background:#22c55e;}.toast-error{background:var(--danger);}.toast-info{background:var(--primary);}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px) scale(.92);}to{opacity:1;transform:none;}}
+@keyframes toastOut{from{opacity:1;}to{opacity:0;transform:translateY(8px) scale(.92);}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay{display:block;}
+  .topbar{display:flex;}
+  .main{margin-left:0;padding-top:var(--topbar-h);}
+  .main-inner{padding:1.25rem 1rem 3rem;}
+  .page-header{flex-direction:column;align-items:flex-start;}
+  .tc-right{display:none;}
+  .filter-bar{gap:.5rem;}
+}
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <div>
+        <div class="sidebar-logo-title">LENDING MANAGEMENT</div>
+        <div class="sidebar-logo-sub">Loan Management System</div>
+      </div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <span class="nav-label">Overview</span>
+    <a class="nav-item" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard Summary</a>
+    <a class="nav-item sub" href="monthly-profit.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Monthly Profit</a>
+    <a class="nav-item sub" href="past-due.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Past Due</a>
+    <a class="nav-item sub" href="cash-flow.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Cash Flow</a>
+    <span class="nav-label">Clients & Loans</span>
+    <a class="nav-item" href="client-loan-summary.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Client Loan Summary</a>
+    <a class="nav-item" href="loan-schedule.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Loan Schedule</a>
+    <a class="nav-item active" href="payment-data.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payment Data</a>
+    <a class="nav-item" href="loan-data.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Loan Data</a>
+    <a class="nav-item" href="client-list.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Client List</a>
+    <span class="nav-label">Settings</span>
+    <a class="nav-item" href="setup.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Setup</a>
+    <a class="nav-item admin-only" href="user-management.html" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>User Management<span class="badge-admin">ADMIN</span></a>
+    <a class="nav-item admin-only" href="list-management.html" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>List Management<span class="badge-admin">ADMIN</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="theme-row">
+      <span class="theme-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Dark Mode</span>
+      <div class="theme-switch" id="themeSwitch"></div>
+    </div>
+    <div class="date-widget" id="dateWidget">—</div>
+    <div class="user-row">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div style="flex:1;min-width:0;"><div class="user-name" id="userName">Loading…</div><div class="user-email" id="userEmail"></div></div>
+      <span class="role-badge" id="roleBadge">—</span>
+    </div>
+    <button class="btn-logout" id="logoutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>
+  </div>
+</aside>
+
+<!-- Mobile Topbar -->
+<div class="topbar" id="topbar">
+  <button class="btn-menu" id="menuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  <span class="topbar-title">Payment Data</span>
+  <button class="btn-menu" id="menuThemeBtn">
+    <svg id="topIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg id="topIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+<div class="main-inner">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Payment Data</h1>
+      <p class="page-subtitle">All payment transactions across all loans, all time</p>
+    </div>
+  </div>
+
+  <!-- Total Collected Card -->
+  <div class="total-card">
+    <div class="tc-left">
+      <div class="tc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+      <div>
+        <div class="tc-label">Total Collected — All Time</div>
+        <div class="tc-value" id="totalCollected"><div class="skel" style="height:1.85rem;width:10rem;background:rgba(255,255,255,.2);"></div></div>
+        <div class="tc-sub" id="totalCollectedSub">Loading…</div>
+      </div>
+    </div>
+    <div class="tc-right">
+      <div class="tc-stat"><div class="tc-stat-val" id="statThisMonth">—</div><div class="tc-stat-lbl">This Month</div></div>
+      <div class="tc-stat"><div class="tc-stat-val" id="statTxCount">—</div><div class="tc-stat-lbl">Transactions</div></div>
+      <div class="tc-stat"><div class="tc-stat-val" id="statAvgPmt">—</div><div class="tc-stat-lbl">Avg Payment</div></div>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <span class="filter-label">Search:</span>
+    <input class="filter-input" type="text" id="searchInput" placeholder="Name or Loan ID…"/>
+    <span class="filter-label">Month:</span>
+    <select class="filter-select" id="filterMonth">
+      <option value="all">All Months</option>
+      <option value="0">January</option><option value="1">February</option>
+      <option value="2">March</option><option value="3">April</option>
+      <option value="4">May</option><option value="5">June</option>
+      <option value="6">July</option><option value="7">August</option>
+      <option value="8">September</option><option value="9">October</option>
+      <option value="10">November</option><option value="11">December</option>
+    </select>
+    <select class="filter-select" id="filterYear">
+      <option value="all">All Years</option>
+      <option value="2024">2024</option>
+      <option value="2025">2025</option>
+      <option value="2026">2026</option>
+    </select>
+    <div class="filter-spacer"></div>
+    <span class="result-count" id="resultCount">Loading…</span>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <div class="table-head">
+      <span class="th-title">Payment Transactions</span>
+      <span class="th-sub" id="tableSubtitle">sorted by most recent</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th data-col="borrower">Borrower <span class="sort-icon">↕</span></th>
+            <th data-col="loanId">Loan ID <span class="sort-icon">↕</span></th>
+            <th data-col="balanceBefore">Bal. Before <span class="sort-icon">↕</span></th>
+            <th data-col="amountPaid">Payment <span class="sort-icon">↕</span></th>
+            <th data-col="interestValue">Interest <span class="sort-icon">↕</span></th>
+            <th data-col="balanceAfter">Bal. After <span class="sort-icon">↕</span></th>
+            <th data-col="paymentDate">Pay Date <span class="sort-icon">↕</span></th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="paymentsTbody">
+          <tr><td colspan="8">
+            <div class="empty-state">
+              <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+              <div class="empty-title">Loading payments…</div>
+            </div>
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination" id="paginationBar"></div>
+  </div>
+
+</div>
+</main>
+
+<!-- EDIT PAYMENT MODAL (admin only) -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Edit Payment</h2>
+      <button class="modal-close" data-close="editModal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Borrower</label>
+          <input class="form-input" id="editBorrower" disabled/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Loan ID</label>
+          <input class="form-input" id="editLoanId" disabled/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Amount Paid (₱)</label>
+          <input class="form-input" type="number" id="editAmountPaid" min="0" step="0.01"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Interest Value (₱)</label>
+          <input class="form-input" type="number" id="editInterestValue" min="0" step="0.01"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Payment Date</label>
+          <input class="form-input" type="date" id="editPaymentDate"/>
+        </div>
+      </div>
+      <div class="chain-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Saving will recalculate all subsequent payment balances in the chain for this loan.
+      </div>
+      <div class="calc-preview" id="editPreview" style="display:none;">
+        <div class="calc-preview-lbl">New Balance After</div>
+        <div class="calc-preview-val" id="editPreviewVal">—</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close="editModal">Cancel</button>
+      <button class="btn btn-primary" id="saveEditBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Save & Recalculate</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signOut, onAuthStateChanged }
+                           from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, getDocs, getDoc, doc, updateDoc, query, where, orderBy }
+                           from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig={apiKey:"AIzaSyBjYXRXK2lGBdUiWku1rae7MTpYl3bl0hw",authDomain:"lending-management-app-460f5.firebaseapp.com",projectId:"lending-management-app-460f5",storageBucket:"lending-management-app-460f5.firebasestorage.app",messagingSenderId:"167550754445",appId:"1:167550754445:web:e1548d3b0f52b751ed0cc4"};
+const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+
+/* ── Helpers ── */
+const fmt=n=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP',minimumFractionDigits:2}).format(n||0);
+const fmtShort=n=>{ if(Math.abs(n)>=1000000) return '₱'+(n/1000000).toFixed(1)+'M'; if(Math.abs(n)>=1000) return '₱'+(n/1000).toFixed(0)+'K'; return fmt(n); };
+const fmtDate=d=>{if(!d)return'—';const dt=d.toDate?d.toDate():new Date(d);return dt.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});};
+const toDate=ts=>{if(!ts)return null;if(ts.toDate)return ts.toDate();return new Date(ts);};
+const toast=(msg,type='info',dur=3200)=>{const el=document.createElement('div');el.className=`toast toast-${type}`;el.textContent=msg;document.getElementById('toastContainer').appendChild(el);setTimeout(()=>{el.style.animation='toastOut .3s ease forwards';setTimeout(()=>el.remove(),300);},dur);};
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const PAGE_SIZE=25;
+
+/* ── Auth ── */
+onAuthStateChanged(auth,async user=>{
+  if(!user){window.location.href='login.html';return;}
+  let sess=sessionStorage.getItem('lma_user');
+  if(!sess){const snap=await getDoc(doc(db,'user_roles',user.uid));const role=snap.exists()?snap.data().role:'pending';if(role==='pending'){window.location.href='login.html';return;}sessionStorage.setItem('lma_user',JSON.stringify({uid:user.uid,email:user.email,displayName:user.displayName,photoURL:user.photoURL,role}));}
+  const info=JSON.parse(sessionStorage.getItem('lma_user'));
+  if(info.role==='pending'){window.location.href='login.html';return;}
+  initUI(info); loadData();
+});
+
+function initUI(info){
+  document.getElementById('userName').textContent=info.displayName||'User';
+  document.getElementById('userEmail').textContent=info.email||'';
+  const rb=document.getElementById('roleBadge');rb.textContent=info.role;rb.className=`role-badge ${info.role}`;
+  const av=document.getElementById('userAvatar');if(info.photoURL)av.innerHTML=`<img src="${info.photoURL}" alt=""/>`;else av.textContent=(info.displayName||'U')[0].toUpperCase();
+  if(info.role==='admin')document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
+  window._isAdmin=info.role==='admin';
+}
+const now=new Date();
+document.getElementById('dateWidget').textContent=`${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+document.getElementById('logoutBtn').addEventListener('click',async()=>{await signOut(auth);sessionStorage.removeItem('lma_user');window.location.href='login.html';});
+
+/* ── Theme ── */
+(function(){const root=document.documentElement,sw=document.getElementById('themeSwitch'),sunT=document.getElementById('topIconSun'),moonT=document.getElementById('topIconMoon');
+function apply(t){root.setAttribute('data-theme',t);localStorage.setItem('lma_theme',t);sw.classList.toggle('on',t==='dark');if(sunT){sunT.style.display=t==='dark'?'none':'';moonT.style.display=t==='dark'?'':'none';}}
+apply(localStorage.getItem('lma_theme')||'light');
+sw.addEventListener('click',()=>apply(root.getAttribute('data-theme')==='dark'?'light':'dark'));
+document.getElementById('menuThemeBtn')?.addEventListener('click',()=>apply(root.getAttribute('data-theme')==='dark'?'light':'dark'));})();
+
+/* ── Sidebar ── */
+const sidebar=document.getElementById('sidebar'),overlay=document.getElementById('sidebarOverlay');
+document.getElementById('menuBtn')?.addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('show');});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('show');});
+
+/* ── Modal ── */
+document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',()=>document.getElementById(btn.dataset.close).classList.remove('open')));
+document.querySelectorAll('.modal-overlay').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open');}));
+
+/* ══════════════════════════════════════════
+   STATE & DATA
+══════════════════════════════════════════ */
+let allPayments=[], allLoans=[], allBorrowers=[];
+let filtered=[], currentPage=1;
+let sortCol='paymentDate', sortDir='desc';
+let editingPayment=null;
+
+async function loadData(){
+  try{
+    const [pSnap,lSnap,bSnap]=await Promise.all([
+      getDocs(collection(db,'payments')),
+      getDocs(collection(db,'loans')),
+      getDocs(collection(db,'borrowers'))
+    ]);
+    allPayments=pSnap.docs.map(d=>({id:d.id,...d.data()}));
+    allLoans=lSnap.docs.map(d=>({id:d.id,...d.data()}));
+    allBorrowers=bSnap.docs.map(d=>({id:d.id,...d.data()}));
+    computeStats();
+    applyFilters();
+  }catch(err){toast('Error loading data: '+err.message,'error');}
+}
+
+/* ── Stats ── */
+function computeStats(){
+  const total=allPayments.reduce((s,p)=>s+(p.amountPaid||0),0);
+  const curM=now.getMonth(), curY=now.getFullYear();
+  const thisMonth=allPayments.filter(p=>{const d=toDate(p.paymentDate||p.createdAt);return d&&d.getFullYear()===curY&&d.getMonth()===curM;}).reduce((s,p)=>s+(p.amountPaid||0),0);
+  const avg=allPayments.length>0?total/allPayments.length:0;
+
+  document.getElementById('totalCollected').textContent=fmt(total);
+  document.getElementById('totalCollectedSub').textContent=`from ${allPayments.length} total transactions`;
+  document.getElementById('statThisMonth').textContent=fmtShort(thisMonth);
+  document.getElementById('statTxCount').textContent=allPayments.length.toLocaleString();
+  document.getElementById('statAvgPmt').textContent=fmtShort(avg);
+}
+
+/* ── Filters ── */
+['searchInput','filterMonth','filterYear'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',()=>{currentPage=1;applyFilters();});
+  document.getElementById(id).addEventListener('change',()=>{currentPage=1;applyFilters();});
+});
+
+function applyFilters(){
+  const search=document.getElementById('searchInput').value.toLowerCase().trim();
+  const month=document.getElementById('filterMonth').value;
+  const year=document.getElementById('filterYear').value;
+
+  // Build lookup maps
+  const loanMap=Object.fromEntries(allLoans.map(l=>[l.id,l]));
+  const borrowerMap=Object.fromEntries(allBorrowers.map(b=>[b.id,b]));
+
+  filtered=allPayments.filter(p=>{
+    const loan=loanMap[p.loanId]||{};
+    const borrower=borrowerMap[p.borrowerId]||{};
+    const name=`${borrower.firstName||''} ${borrower.lastName||''}`.toLowerCase();
+    const loanNum=(loan.loanNumber||p.loanId||'').toLowerCase();
+
+    if(search&&!name.includes(search)&&!loanNum.includes(search)) return false;
+
+    const d=toDate(p.paymentDate||p.createdAt);
+    if(month!=='all'&&d&&d.getMonth()!==parseInt(month)) return false;
+    if(year!=='all'&&d&&d.getFullYear()!==parseInt(year)) return false;
+    return true;
+  });
+
+  // Sort
+  filtered.sort((a,b)=>{
+    let va,vb;
+    const loanMap2=Object.fromEntries(allLoans.map(l=>[l.id,l]));
+    const bMap2=Object.fromEntries(allBorrowers.map(b=>[b.id,b]));
+    if(sortCol==='borrower'){
+      const ba=bMap2[a.borrowerId]||{},bb=bMap2[b.borrowerId]||{};
+      va=`${ba.firstName||''} ${ba.lastName||''}`;
+      vb=`${bb.firstName||''} ${bb.lastName||''}`;
+      return sortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
+    }
+    if(sortCol==='loanId'){
+      va=(loanMap2[a.loanId]?.loanNumber||a.loanId||'');
+      vb=(loanMap2[b.loanId]?.loanNumber||b.loanId||'');
+      return sortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
+    }
+    if(sortCol==='paymentDate'){
+      va=toDate(a.paymentDate||a.createdAt)||new Date(0);
+      vb=toDate(b.paymentDate||b.createdAt)||new Date(0);
+      return sortDir==='asc'?va-vb:vb-va;
+    }
+    va=a[sortCol]||0; vb=b[sortCol]||0;
+    return sortDir==='asc'?va-vb:vb-va;
+  });
+
+  document.getElementById('resultCount').textContent=`${filtered.length} record${filtered.length!==1?'s':''}`;
+  renderTable();
+}
+
+/* ── Sort ── */
+document.querySelectorAll('th[data-col]').forEach(th=>{
+  th.addEventListener('click',()=>{
+    const col=th.dataset.col;
+    if(sortCol===col) sortDir=sortDir==='asc'?'desc':'asc';
+    else{sortCol=col;sortDir=col==='paymentDate'?'desc':'asc';}
+    document.querySelectorAll('th[data-col]').forEach(t=>t.classList.remove('sorted'));
+    th.classList.add('sorted');
+    th.querySelector('.sort-icon').textContent=sortDir==='asc'?'↑':'↓';
+    applyFilters();
+  });
+});
+
+/* ── Render table ── */
+function renderTable(){
+  const loanMap=Object.fromEntries(allLoans.map(l=>[l.id,l]));
+  const borrowerMap=Object.fromEntries(allBorrowers.map(b=>[b.id,b]));
+  const tbody=document.getElementById('paymentsTbody');
+  const start=(currentPage-1)*PAGE_SIZE, end=start+PAGE_SIZE;
+  const page=filtered.slice(start,end);
+
+  if(!page.length){
+    tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state">
+      <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+      <div class="empty-title">No payments found</div>
+      <div class="empty-body">Try adjusting your search or filter criteria.</div>
+    </div></td></tr>`;
+    renderPagination(0);
+    return;
+  }
+
+  tbody.innerHTML=page.map((p,i)=>{
+    const loan=loanMap[p.loanId]||{};
+    const b=borrowerMap[p.borrowerId]||{};
+    const name=b.firstName?`${b.firstName} ${b.lastName}`:'—';
+    const loanNum=loan.loanNumber||p.loanId||'—';
+    const editBtn=window._isAdmin
+      ?`<button class="btn-edit" data-pmtid="${p.id}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit
+        </button>` : '—';
+    return `<tr style="animation:fadeUp .25s ${i*.02}s both;">
+      <td class="td-name">${name}<br><span style="font-size:.68rem;color:var(--text3);font-weight:400;">${b.clientNumber||''}</span></td>
+      <td class="td-mono">${loanNum}</td>
+      <td>${fmt(p.balanceBefore)}</td>
+      <td class="td-green">${fmt(p.amountPaid)}</td>
+      <td class="td-amber">${fmt(p.interestValue)}</td>
+      <td class="td-red">${fmt(p.balanceAfter)}</td>
+      <td class="td-date">${fmtDate(p.paymentDate||p.createdAt)}</td>
+      <td>${editBtn}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('tableSubtitle').textContent=`Showing ${start+1}–${Math.min(end,filtered.length)} of ${filtered.length}`;
+
+  /* Edit button listeners */
+  document.querySelectorAll('.btn-edit[data-pmtid]').forEach(btn=>{
+    btn.addEventListener('click',()=>openEditModal(btn.dataset.pmtid));
+  });
+
+  renderPagination(filtered.length);
+}
+
+/* ── Pagination ── */
+function renderPagination(total){
+  const bar=document.getElementById('paginationBar');
+  const pages=Math.ceil(total/PAGE_SIZE);
+  if(pages<=1){bar.innerHTML='';return;}
+
+  let btns='';
+  // Prev
+  btns+=`<button class="pag-btn" id="pagPrev" ${currentPage===1?'disabled':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>`;
+  // Pages (show window around current)
+  const start=Math.max(1,currentPage-2), end=Math.min(pages,currentPage+2);
+  if(start>1) btns+=`<button class="pag-btn" data-page="1">1</button>${start>2?'<span style="padding:0 .25rem;color:var(--text3);">…</span>':''}`;
+  for(let p=start;p<=end;p++) btns+=`<button class="pag-btn ${p===currentPage?'active':''}" data-page="${p}">${p}</button>`;
+  if(end<pages) btns+=`${end<pages-1?'<span style="padding:0 .25rem;color:var(--text3);">…</span>':''}<button class="pag-btn" data-page="${pages}">${pages}</button>`;
+  // Next
+  btns+=`<button class="pag-btn" id="pagNext" ${currentPage===pages?'disabled':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>`;
+
+  bar.innerHTML=`<span class="pag-info">Page ${currentPage} of ${pages}</span><div class="pag-controls">${btns}</div>`;
+
+  bar.querySelectorAll('[data-page]').forEach(btn=>btn.addEventListener('click',()=>{currentPage=parseInt(btn.dataset.page);renderTable();}));
+  bar.querySelector('#pagPrev')?.addEventListener('click',()=>{if(currentPage>1){currentPage--;renderTable();}});
+  bar.querySelector('#pagNext')?.addEventListener('click',()=>{if(currentPage<pages){currentPage++;renderTable();}});
+}
+
+/* ══════════════════════════════════════════
+   EDIT PAYMENT
+══════════════════════════════════════════ */
+function openEditModal(pmtId){
+  const p=allPayments.find(x=>x.id===pmtId);
+  if(!p)return;
+  editingPayment={...p};
+
+  const loanMap=Object.fromEntries(allLoans.map(l=>[l.id,l]));
+  const bMap=Object.fromEntries(allBorrowers.map(b=>[b.id,b]));
+  const loan=loanMap[p.loanId]||{};
+  const borrower=bMap[p.borrowerId]||{};
+
+  document.getElementById('editBorrower').value=borrower.firstName?`${borrower.firstName} ${borrower.lastName}`:'—';
+  document.getElementById('editLoanId').value=loan.loanNumber||p.loanId||'—';
+  document.getElementById('editAmountPaid').value=p.amountPaid||0;
+  document.getElementById('editInterestValue').value=p.interestValue||0;
+  document.getElementById('editPaymentDate').value=p.paymentDate||'';
+  document.getElementById('editPreview').style.display='none';
+  document.getElementById('editModal').classList.add('open');
+  updateEditPreview();
+}
+
+['editAmountPaid','editInterestValue'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('input',updateEditPreview);
+});
+
+function updateEditPreview(){
+  if(!editingPayment)return;
+  const amt=parseFloat(document.getElementById('editAmountPaid').value)||0;
+  const int=parseFloat(document.getElementById('editInterestValue').value)||0;
+  const bal=editingPayment.balanceBefore||0;
+  const after=Math.max(0,bal-(amt-int));
+  const prev=document.getElementById('editPreview');
+  prev.style.display='';
+  document.getElementById('editPreviewVal').textContent=fmt(after);
+}
+
+document.getElementById('saveEditBtn').addEventListener('click',async()=>{
+  if(!editingPayment)return;
+  const p=editingPayment;
+  const amountPaid=parseFloat(document.getElementById('editAmountPaid').value)||0;
+  const interestValue=parseFloat(document.getElementById('editInterestValue').value)||0;
+  const paymentDate=document.getElementById('editPaymentDate').value;
+  if(!amountPaid||!paymentDate){toast('Fill in all fields.','error');return;}
+
+  const btn=document.getElementById('saveEditBtn');
+  btn.disabled=true;btn.textContent='Saving…';
+  try{
+    // Update this payment
+    const principalPaid=amountPaid-interestValue;
+    const balanceBefore=p.balanceBefore||0;
+    const balanceAfter=Math.max(0,balanceBefore-principalPaid);
+    await updateDoc(doc(db,'payments',p.id),{amountPaid,interestValue,paymentDate,balanceAfter});
+
+    // Recalculate chain for all subsequent payments on this loan
+    const chainSnap=await getDocs(query(collection(db,'payments'),where('loanId','==',p.loanId)));
+    let chain=chainSnap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>{
+      const da=toDate(a.paymentDate||a.createdAt), db=toDate(b.paymentDate||b.createdAt);
+      return(da||0)-(db||0);
+    });
+
+    // Find this payment and rebuild forward
+    const loanSnap=await getDocs(query(collection(db,'loans'),where('__name__','==',p.loanId)));
+    const loanDoc=loanSnap.docs[0]?.data()||{};
+    let runBal=loanDoc.principal||0;
+    for(const cp of chain){
+      const isThis=cp.id===p.id;
+      const pmtAmt=isThis?amountPaid:(cp.amountPaid||0);
+      const pmtInt=isThis?interestValue:(cp.interestValue||0);
+      const prin=pmtAmt-pmtInt;
+      const after=Math.max(0,runBal-prin);
+      await updateDoc(doc(db,'payments',cp.id),{balanceBefore:runBal,balanceAfter:after});
+      runBal=after;
+    }
+    // Update loan balance
+    const newStatus=runBal<=0?'paid':'active';
+    await updateDoc(doc(db,'loans',p.loanId),{currentBalance:runBal,status:newStatus});
+
+    toast('Payment updated and chain recalculated!','success');
+    document.getElementById('editModal').classList.remove('open');
+    await loadData();
+  }catch(err){toast('Error: '+err.message,'error');console.error(err);}
+  finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Save & Recalculate';}
+});
+</script>
+<script>(function(){const t=localStorage.getItem('lma_theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+</body>
+</html>

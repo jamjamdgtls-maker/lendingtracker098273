@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Loan Schedule — Lending Management App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f4f6fb;--surface:#ffffff;--card:#eef0f5;
+  --primary:#6c3dcc;--primary-h:#5a2fb5;--primary-g:#8b5cf6;
+  --accent:#22c55e;--warn:#eab308;--danger:#ef4444;--muted:#e8eaee;
+  --text:#1a1a2e;--text2:#4b5280;--text3:#8892b0;
+  --border:rgba(108,61,204,.13);--glow:rgba(108,61,204,.15);
+  --sidebar-w:260px;--topbar-h:60px;
+  --r:1rem;--rs:.6rem;
+  --tr:.22s cubic-bezier(.4,0,.2,1);
+  --shadow:0 2px 16px rgba(108,61,204,.08),0 1px 3px rgba(0,0,0,.04);
+  --shadow-md:0 4px 28px rgba(108,61,204,.12),0 2px 6px rgba(0,0,0,.06);
+  --font-d:'Syne',sans-serif;--font-b:'Instrument Sans',sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#13111f;--surface:#1e1b30;--card:#272b3d;
+  --primary:#7c4dff;--primary-h:#6e3fef;--primary-g:#a78bfa;
+  --muted:#2e3350;--text:#f0edff;--text2:#a8b0d0;--text3:#6070a0;
+  --border:rgba(124,77,255,.18);--glow:rgba(124,77,255,.2);
+  --shadow:0 2px 16px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.2);
+  --shadow-md:0 4px 28px rgba(0,0,0,.42),0 2px 6px rgba(0,0,0,.25);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;}
+body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height:100dvh;display:flex;overflow-x:hidden;transition:background var(--tr),color var(--tr);}
+button{font-family:var(--font-b);cursor:pointer;border:none;background:none;}
+a{text-decoration:none;color:inherit;}
+input,select,textarea{font-family:var(--font-b);}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100dvh;position:fixed;left:0;top:0;z-index:200;transition:transform var(--tr),background var(--tr);overflow:hidden;}
+.sidebar-header{padding:1.25rem 1.1rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sidebar-logo{display:flex;align-items:center;gap:.65rem;}
+.sidebar-logo-icon{width:2.1rem;height:2.1rem;border-radius:.55rem;background:linear-gradient(135deg,var(--primary),var(--primary-g));display:grid;place-items:center;flex-shrink:0;}
+.sidebar-logo-icon svg{width:1.1rem;height:1.1rem;color:#fff;}
+.sidebar-logo-title{font-family:var(--font-d);font-weight:800;font-size:.78rem;line-height:1.15;color:var(--text);}
+.sidebar-logo-sub{font-size:.62rem;color:var(--text3);font-weight:500;letter-spacing:.05em;margin-top:.1rem;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:.75rem .6rem;display:flex;flex-direction:column;gap:.15rem;}
+.sidebar-nav::-webkit-scrollbar{width:3px;}
+.sidebar-nav::-webkit-scrollbar-thumb{background:var(--muted);border-radius:10px;}
+.nav-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:.5rem .65rem .25rem;margin-top:.35rem;}
+.nav-item{display:flex;align-items:center;gap:.6rem;padding:.55rem .7rem;border-radius:var(--rs);color:var(--text2);font-size:.82rem;font-weight:500;transition:var(--tr);}
+.nav-item:hover{background:var(--muted);color:var(--text);}
+.nav-item.active{background:var(--primary);color:#fff;}
+.nav-item svg{width:1rem;height:1rem;flex-shrink:0;color:var(--text3);transition:var(--tr);}
+.nav-item:hover svg,.nav-item.active svg{color:currentColor;}
+.nav-item.sub{padding-left:1.9rem;font-size:.78rem;}
+.nav-item .badge-admin{margin-left:auto;font-size:.55rem;font-weight:700;background:var(--primary);color:#fff;padding:.1rem .35rem;border-radius:100px;}
+.sidebar-footer{padding:.75rem .6rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.5rem;flex-shrink:0;}
+.theme-row{display:flex;align-items:center;justify-content:space-between;padding:.35rem .5rem;}
+.theme-label{font-size:.75rem;color:var(--text2);font-weight:500;display:flex;align-items:center;gap:.4rem;}
+.theme-label svg{width:.9rem;height:.9rem;}
+.theme-switch{width:2.4rem;height:1.3rem;border-radius:100px;background:var(--muted);border:1.5px solid var(--border);position:relative;transition:var(--tr);cursor:pointer;}
+.theme-switch.on{background:var(--primary);border-color:var(--primary);}
+.theme-switch::after{content:'';position:absolute;top:2px;left:2px;width:calc(1.3rem - 8px);height:calc(1.3rem - 8px);background:#fff;border-radius:50%;transition:var(--tr);}
+.theme-switch.on::after{transform:translateX(1.1rem);}
+.date-widget{padding:.4rem .5rem;background:var(--card);border-radius:var(--rs);font-size:.72rem;color:var(--text2);text-align:center;font-weight:500;}
+.user-row{display:flex;align-items:center;gap:.55rem;padding:.35rem .5rem;}
+.user-avatar{width:1.8rem;height:1.8rem;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-g));display:grid;place-items:center;font-size:.7rem;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;}
+.user-avatar img{width:100%;height:100%;object-fit:cover;}
+.user-name{font-size:.75rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-email{font-size:.62rem;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.role-badge{font-size:.55rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:.15rem .4rem;border-radius:100px;flex-shrink:0;}
+.role-badge.admin{background:rgba(108,61,204,.15);color:var(--primary);}
+.role-badge.user{background:var(--muted);color:var(--text2);}
+.btn-logout{display:flex;align-items:center;justify-content:center;gap:.45rem;padding:.45rem;border-radius:var(--rs);color:var(--danger);font-size:.78rem;font-weight:600;transition:var(--tr);}
+.btn-logout:hover{background:rgba(239,68,68,.08);}
+.btn-logout svg{width:.85rem;height:.85rem;}
+.sidebar-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);opacity:0;transition:opacity var(--tr);}
+.sidebar-overlay.show{opacity:1;}
+
+/* ── TOPBAR ── */
+.topbar{display:none;height:var(--topbar-h);background:var(--surface);border-bottom:1px solid var(--border);align-items:center;gap:.75rem;padding:0 1rem;position:fixed;top:0;left:0;right:0;z-index:180;}
+.topbar-title{font-family:var(--font-d);font-weight:800;font-size:.85rem;flex:1;}
+.btn-menu{width:2.2rem;height:2.2rem;border-radius:var(--rs);background:var(--card);display:grid;place-items:center;transition:var(--tr);}
+.btn-menu:hover{background:var(--muted);}
+.btn-menu svg{width:1.1rem;height:1.1rem;}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar-w);flex:1;min-width:0;display:flex;flex-direction:column;}
+.main-inner{padding:1.75rem 1.75rem 3rem;flex:1;}
+.page-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.page-title{font-family:var(--font-d);font-weight:800;font-size:1.5rem;color:var(--text);}
+.page-subtitle{font-size:.8rem;color:var(--text3);margin-top:.2rem;font-weight:500;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:.45rem;padding:.52rem 1rem;border-radius:var(--rs);font-size:.82rem;font-weight:600;transition:var(--tr);white-space:nowrap;}
+.btn svg{width:.88rem;height:.88rem;flex-shrink:0;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-h);box-shadow:0 4px 16px var(--glow);transform:translateY(-1px);}
+.btn-success{background:#22c55e;color:#fff;}
+.btn-success:hover{background:#16a34a;transform:translateY(-1px);}
+.btn-ghost{background:var(--card);color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--muted);}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-danger:hover{background:#dc2626;transform:translateY(-1px);}
+.btn-warn{background:#eab308;color:#fff;}
+.btn-warn:hover{background:#ca8a04;transform:translateY(-1px);}
+.btn-sm{padding:.32rem .7rem;font-size:.72rem;}
+.btn-xs{padding:.2rem .5rem;font-size:.68rem;}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
+
+/* ── VIEW: CLIENT LIST ── */
+#viewClientList{display:block;}
+#viewLoanList{display:none;}
+#viewSchedule{display:none;}
+
+.search-bar{
+  display:flex;align-items:center;gap:.6rem;
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--rs);padding:.55rem .9rem;margin-bottom:1rem;
+  transition:var(--tr);
+}
+.search-bar:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--glow);}
+.search-bar svg{width:1rem;height:1rem;color:var(--text3);flex-shrink:0;}
+.search-bar input{flex:1;border:none;background:none;color:var(--text);font-size:.85rem;outline:none;}
+.search-bar input::placeholder{color:var(--text3);}
+
+.client-list{display:flex;flex-direction:column;gap:.45rem;}
+.client-item{
+  background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);
+  padding:.9rem 1.1rem;display:flex;align-items:center;gap:.85rem;
+  cursor:pointer;transition:var(--tr);
+  animation:fadeUp .35s ease both;
+}
+.client-item:hover{border-color:var(--primary);box-shadow:var(--shadow);transform:translateX(3px);}
+.client-avatar{width:2.4rem;height:2.4rem;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-g));display:grid;place-items:center;font-family:var(--font-d);font-weight:800;font-size:.85rem;color:#fff;flex-shrink:0;}
+.client-name{font-weight:700;font-size:.9rem;color:var(--text);}
+.client-meta{font-size:.72rem;color:var(--text3);margin-top:.1rem;}
+.client-badge{margin-left:auto;background:var(--muted);color:var(--text3);padding:.18rem .55rem;border-radius:100px;font-size:.65rem;font-weight:700;white-space:nowrap;}
+.client-badge.has-loans{background:rgba(108,61,204,.1);color:var(--primary);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
+/* ── VIEW: LOAN LIST ── */
+.back-btn{
+  display:inline-flex;align-items:center;gap:.4rem;
+  color:var(--text2);font-size:.82rem;font-weight:600;
+  padding:.4rem .7rem;border-radius:var(--rs);
+  background:var(--card);border:1px solid var(--border);
+  transition:var(--tr);margin-bottom:1rem;
+}
+.back-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
+.back-btn svg{width:.85rem;height:.85rem;}
+
+.client-info-banner{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:1rem 1.25rem;margin-bottom:1rem;
+  display:flex;align-items:center;gap:1rem;box-shadow:var(--shadow);
+}
+.cib-avatar{width:2.8rem;height:2.8rem;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-g));display:grid;place-items:center;font-family:var(--font-d);font-weight:800;font-size:1rem;color:#fff;flex-shrink:0;}
+.cib-name{font-family:var(--font-d);font-weight:800;font-size:1rem;color:var(--text);}
+.cib-sub{font-size:.75rem;color:var(--text3);margin-top:.15rem;}
+
+.loans-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
+.loans-table-head{padding:.8rem 1.2rem;background:linear-gradient(90deg,var(--primary),var(--primary-g));display:flex;align-items:center;justify-content:space-between;}
+.loans-table-head-title{font-family:var(--font-d);font-weight:700;font-size:.88rem;color:#fff;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);padding:.6rem 1rem;text-align:left;border-bottom:1px solid var(--border);}
+td{font-size:.8rem;padding:.7rem 1rem;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--card);}
+.td-bold{font-weight:700;color:var(--text);}
+.td-mono{font-family:monospace;font-size:.76rem;}
+.td-green{color:#22c55e;font-weight:600;}
+.td-red{color:var(--danger);font-weight:600;}
+.td-amber{color:#d97706;font-weight:600;}
+.td-purple{color:var(--primary);font-weight:600;}
+.status-pill{display:inline-flex;align-items:center;gap:.3rem;padding:.18rem .6rem;border-radius:100px;font-size:.65rem;font-weight:700;text-transform:uppercase;}
+.pill-active{background:rgba(34,197,94,.1);color:#22c55e;}
+.pill-paid{background:var(--muted);color:var(--text3);}
+.pill-past{background:rgba(239,68,68,.1);color:var(--danger);}
+.select-loan-btn{display:inline-flex;align-items:center;gap:.3rem;padding:.28rem .7rem;border-radius:var(--rs);background:rgba(108,61,204,.08);color:var(--primary);border:1px solid rgba(108,61,204,.2);font-size:.72rem;font-weight:600;transition:var(--tr);}
+.select-loan-btn:hover{background:var(--primary);color:#fff;}
+
+/* ── VIEW: SCHEDULE ── */
+.sched-header{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-bottom:1.25rem;}
+.sched-header-left{display:flex;align-items:center;gap:.6rem;}
+.sched-title{font-family:var(--font-d);font-weight:800;font-size:1.1rem;color:var(--text);}
+.sched-subtitle{font-size:.75rem;color:var(--text3);margin-top:.15rem;}
+.sched-actions{display:flex;gap:.5rem;flex-wrap:wrap;}
+
+/* Info Cards */
+.info-cards{display:grid;grid-template-columns:repeat(7,1fr);gap:.6rem;margin-bottom:1.25rem;}
+.ic{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:.75rem .8rem;box-shadow:var(--shadow);}
+.ic-lbl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:.3rem;}
+.ic-val{font-family:var(--font-d);font-weight:800;font-size:.9rem;color:var(--text);line-height:1.2;}
+
+/* Alert Banner */
+.alert-banner{border-radius:var(--r);padding:1rem 1.25rem;margin-bottom:1.1rem;border-left:4px solid;animation:slideIn .4s ease both;}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px);}to{opacity:1;transform:none;}}
+.ab-overdue{background:rgba(249,115,22,.06);border-color:#f97316;}
+.ab-delinquent{background:rgba(239,68,68,.06);border-color:var(--danger);}
+.ab-default{background:rgba(127,29,29,.07);border-color:#b91c1c;}
+.ab-severe{background:rgba(127,29,29,.1);border-color:#7f1d1d;}
+.ab-title{font-family:var(--font-d);font-weight:700;font-size:.88rem;margin-bottom:.25rem;}
+.ab-body{font-size:.78rem;color:var(--text2);}
+.ab-stats{display:flex;gap:1.25rem;margin-top:.5rem;flex-wrap:wrap;}
+.ab-stat{font-size:.72rem;font-weight:600;color:var(--text2);}
+.ab-stat strong{color:var(--text);}
+
+/* Extension Banner */
+.ext-banner{background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.3);border-radius:var(--rs);padding:.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;}
+.ext-text{font-size:.8rem;font-weight:600;color:#92400e;}
+[data-theme="dark"] .ext-text{color:#fde047;}
+
+/* Restructure Panel */
+.restructure-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;margin-bottom:1.25rem;box-shadow:var(--shadow);}
+.restruct-title{font-family:var(--font-d);font-weight:700;font-size:.9rem;color:var(--text);margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem;}
+.restruct-title svg{width:1rem;height:1rem;color:var(--warn);}
+.restruct-grid{display:grid;grid-template-columns:1fr 1fr auto;gap:.75rem;align-items:end;}
+.form-group{display:flex;flex-direction:column;gap:.3rem;}
+.form-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);}
+.form-input,.form-select{padding:.55rem .8rem;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:.84rem;font-family:var(--font-b);transition:var(--tr);}
+.form-input:focus,.form-select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--glow);}
+.restruct-preview{margin-top:1rem;border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;}
+.restruct-preview-header{padding:.6rem 1rem;background:linear-gradient(90deg,#d97706,#eab308);font-family:var(--font-d);font-weight:700;font-size:.82rem;color:#fff;display:flex;justify-content:space-between;}
+.restruct-preview table{min-width:100%;}
+.restruct-preview th{font-size:.62rem;padding:.5rem .8rem;}
+.restruct-preview td{font-size:.75rem;padding:.55rem .8rem;}
+
+/* Schedule Table */
+.sched-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
+.sched-table-head{padding:.85rem 1.25rem;background:linear-gradient(90deg,var(--primary),var(--primary-g));display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;}
+.sched-table-title{font-family:var(--font-d);font-weight:700;font-size:.9rem;color:#fff;}
+.sched-table-scroll{overflow-x:auto;}
+.sched-table{width:100%;border-collapse:collapse;min-width:800px;}
+.sched-table th{font-size:.63rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);padding:.6rem .9rem;text-align:right;border-bottom:1px solid var(--border);}
+.sched-table th:first-child,.sched-table td:first-child{text-align:center;}
+.sched-table td{font-size:.78rem;padding:.65rem .9rem;border-bottom:1px solid var(--border);text-align:right;vertical-align:middle;}
+.sched-table tr:last-child td{border-bottom:none;}
+
+/* Row types */
+.row-paid td{background:rgba(34,197,94,.04);}
+.row-paid:hover td{background:rgba(34,197,94,.09);}
+.row-overdue td{background:rgba(239,68,68,.05);}
+.row-overdue:hover td{background:rgba(239,68,68,.1);}
+.row-current td{background:rgba(59,130,246,.05);}
+.row-current:hover td{background:rgba(59,130,246,.1);}
+.row-upcoming td{background:transparent;}
+.row-upcoming:hover td{background:var(--card);}
+
+.row-badge{display:inline-flex;align-items:center;gap:.25rem;padding:.12rem .5rem;border-radius:100px;font-size:.62rem;font-weight:700;text-transform:uppercase;}
+.rb-paid{background:rgba(34,197,94,.12);color:#22c55e;}
+.rb-overdue{background:rgba(239,68,68,.12);color:var(--danger);}
+.rb-current{background:rgba(59,130,246,.12);color:#3b82f6;}
+.rb-upcoming{background:var(--muted);color:var(--text3);}
+
+.delete-pmt-btn{padding:.18rem .5rem;border-radius:var(--rs);background:rgba(239,68,68,.08);color:var(--danger);border:1px solid rgba(239,68,68,.2);font-size:.65rem;font-weight:600;transition:var(--tr);}
+.delete-pmt-btn:hover{background:var(--danger);color:#fff;}
+.pay-row-btn{padding:.18rem .5rem;border-radius:var(--rs);background:rgba(108,61,204,.08);color:var(--primary);border:1px solid rgba(108,61,204,.2);font-size:.65rem;font-weight:600;transition:var(--tr);}
+.pay-row-btn:hover{background:var(--primary);color:#fff;}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);display:grid;place-items:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity var(--tr);}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 8px 40px rgba(0,0,0,.25);width:100%;max-width:500px;max-height:90dvh;display:flex;flex-direction:column;transform:scale(.95) translateY(10px);transition:transform var(--tr);overflow:hidden;}
+.modal-overlay.open .modal{transform:none;}
+.modal-lg{max-width:640px;}
+.modal-header{padding:1.1rem 1.35rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-title{font-family:var(--font-d);font-weight:800;font-size:.95rem;color:var(--text);}
+.modal-close{width:1.9rem;height:1.9rem;border-radius:50%;background:var(--muted);color:var(--text2);display:grid;place-items:center;transition:var(--tr);}
+.modal-close:hover{background:var(--danger);color:#fff;}
+.modal-close svg{width:.85rem;height:.85rem;}
+.modal-body{padding:1.2rem 1.35rem;overflow-y:auto;flex:1;}
+.modal-footer{padding:.9rem 1.35rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.65rem;flex-shrink:0;}
+
+/* Payment type tabs */
+.pay-tabs{display:flex;gap:.4rem;margin-bottom:1rem;flex-wrap:wrap;}
+.pay-tab{padding:.38rem .85rem;border-radius:var(--rs);font-size:.78rem;font-weight:600;background:var(--card);color:var(--text2);border:1.5px solid var(--border);transition:var(--tr);cursor:pointer;}
+.pay-tab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+.calc-box{background:rgba(108,61,204,.06);border:1px solid var(--border);border-radius:var(--rs);padding:.7rem 1rem;margin-top:.75rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;}
+.calc-lbl{font-size:.75rem;color:var(--text2);font-weight:500;}
+.calc-val{font-family:var(--font-d);font-weight:700;color:var(--primary);font-size:.95rem;}
+
+/* Confirm modal */
+.confirm-icon{width:3.5rem;height:3.5rem;border-radius:50%;background:rgba(239,68,68,.1);display:grid;place-items:center;margin:0 auto .85rem;}
+.confirm-icon svg{width:1.6rem;height:1.6rem;color:var(--danger);}
+.confirm-text{text-align:center;}
+.confirm-title{font-family:var(--font-d);font-weight:800;font-size:1rem;margin-bottom:.4rem;}
+.confirm-body{font-size:.82rem;color:var(--text2);line-height:1.5;}
+
+/* ── SKELETON ── */
+.skel{background:linear-gradient(90deg,var(--muted) 25%,var(--card) 50%,var(--muted) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:.4rem;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+/* ── TOAST ── */
+.toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;pointer-events:none;}
+.toast{padding:.65rem 1.1rem;border-radius:var(--rs);font-size:.8rem;font-weight:600;color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.25);animation:toastIn .3s ease both;pointer-events:auto;max-width:300px;}
+.toast-success{background:#22c55e;}.toast-error{background:var(--danger);}.toast-info{background:var(--primary);}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px) scale(.92);}to{opacity:1;transform:none;}}
+@keyframes toastOut{from{opacity:1;}to{opacity:0;transform:translateY(8px) scale(.92);}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){.info-cards{grid-template-columns:repeat(4,1fr);}}
+@media(max-width:800px){.info-cards{grid-template-columns:repeat(3,1fr);}.restruct-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay{display:block;}
+  .topbar{display:flex;}
+  .main{margin-left:0;padding-top:var(--topbar-h);}
+  .main-inner{padding:1.25rem 1rem 3rem;}
+  .info-cards{grid-template-columns:repeat(2,1fr);}
+  .restruct-grid{grid-template-columns:1fr;}
+}
+@media(max-width:480px){.info-cards{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <div>
+        <div class="sidebar-logo-title">LENDING MANAGEMENT</div>
+        <div class="sidebar-logo-sub">Loan Management System</div>
+      </div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <span class="nav-label">Overview</span>
+    <a class="nav-item" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard Summary</a>
+    <a class="nav-item sub" href="monthly-profit.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Monthly Profit</a>
+    <a class="nav-item sub" href="past-due.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Past Due</a>
+    <a class="nav-item sub" href="cash-flow.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Cash Flow</a>
+    <span class="nav-label">Clients & Loans</span>
+    <a class="nav-item" href="client-loan-summary.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Client Loan Summary</a>
+    <a class="nav-item active" href="loan-schedule.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Loan Schedule</a>
+    <a class="nav-item" href="payment-data.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payment Data</a>
+    <a class="nav-item" href="loan-data.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Loan Data</a>
+    <a class="nav-item" href="client-list.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Client List</a>
+    <span class="nav-label">Settings</span>
+    <a class="nav-item" href="setup.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Setup</a>
+    <a class="nav-item admin-only" href="user-management.html" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>User Management<span class="badge-admin">ADMIN</span></a>
+    <a class="nav-item admin-only" href="list-management.html" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>List Management<span class="badge-admin">ADMIN</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="theme-row">
+      <span class="theme-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Dark Mode</span>
+      <div class="theme-switch" id="themeSwitch"></div>
+    </div>
+    <div class="date-widget" id="dateWidget">—</div>
+    <div class="user-row">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div style="flex:1;min-width:0;"><div class="user-name" id="userName">Loading…</div><div class="user-email" id="userEmail"></div></div>
+      <span class="role-badge" id="roleBadge">—</span>
+    </div>
+    <button class="btn-logout" id="logoutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>
+  </div>
+</aside>
+
+<!-- Mobile Topbar -->
+<div class="topbar" id="topbar">
+  <button class="btn-menu" id="menuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  <span class="topbar-title">Loan Schedule</span>
+  <button class="btn-menu" id="menuThemeBtn">
+    <svg id="topIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg id="topIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+<div class="main-inner">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Loan Schedule</h1>
+      <p class="page-subtitle">Select a client and loan to view amortization schedule and record payments</p>
+    </div>
+  </div>
+
+  <!-- VIEW 1: CLIENT LIST -->
+  <div id="viewClientList">
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="clientSearch" placeholder="Search clients by name or client number…"/>
+    </div>
+    <div class="client-list" id="clientList">
+      <div style="padding:2rem;text-align:center;color:var(--text3);">Loading clients…</div>
+    </div>
+  </div>
+
+  <!-- VIEW 2: LOAN LIST for selected client -->
+  <div id="viewLoanList" style="display:none;">
+    <button class="back-btn" id="backToClients">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Clients
+    </button>
+    <div class="client-info-banner" id="clientInfoBanner"></div>
+    <div class="loans-table-wrap">
+      <div class="loans-table-head">
+        <span class="loans-table-head-title">Loans</span>
+        <span id="loansCount" style="font-size:.72rem;color:rgba(255,255,255,.7);"></span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Loan ID</th><th>Date</th><th>Principal</th>
+            <th>Last Paid</th><th>Total Paid</th><th>Status</th><th>Action</th>
+          </tr></thead>
+          <tbody id="loanListTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 3: SCHEDULE -->
+  <div id="viewSchedule" style="display:none;">
+    <div class="sched-header">
+      <div class="sched-header-left">
+        <button class="back-btn" id="backToLoans" style="margin-bottom:0;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
+        <div>
+          <div class="sched-title" id="schedTitle">Loan Schedule</div>
+          <div class="sched-subtitle" id="schedSubtitle">—</div>
+        </div>
+      </div>
+      <div class="sched-actions">
+        <button class="btn btn-ghost btn-sm" id="btnScreenshot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Save</button>
+        <button class="btn btn-success btn-sm" id="btnRecordPayment"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Record Payment</button>
+      </div>
+    </div>
+
+    <!-- 7 Info Cards -->
+    <div class="info-cards" id="infoCards"></div>
+
+    <!-- Overdue Alert -->
+    <div id="overdueAlert" style="display:none;"></div>
+
+    <!-- Extension Banner -->
+    <div id="extBanner" style="display:none;"></div>
+
+    <!-- Restructure Panel -->
+    <div id="restructurePanel" style="display:none;">
+      <div class="restructure-panel">
+        <div class="restruct-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+          Loan Restructure
+        </div>
+        <div class="restruct-grid">
+          <div class="form-group">
+            <label class="form-label">New Term (months)</label>
+            <input class="form-input" type="number" id="restructMonths" min="1" step="0.5" placeholder="12"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">New Interest Rate (%)</label>
+            <input class="form-input" type="number" id="restructRate" min="0" step="0.01" placeholder="5"/>
+          </div>
+          <button class="btn btn-warn btn-sm" id="btnCalculateRestruct" style="height:fit-content;align-self:end;">Calculate</button>
+        </div>
+        <div id="restructPreview" style="display:none;margin-top:1rem;"></div>
+        <div style="margin-top:.85rem;display:flex;gap:.5rem;" id="restructApplyRow" style="display:none;">
+          <button class="btn btn-warn btn-sm" id="btnApplyRestruct" style="display:none;">Apply Restructure</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Adjust Schedule row -->
+    <div id="adjustRow" style="display:none;margin-bottom:1rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;"></div>
+
+    <!-- Schedule Table -->
+    <div class="sched-table-wrap">
+      <div class="sched-table-head">
+        <span class="sched-table-title">Amortization Schedule</span>
+        <span id="schedTableSub" style="font-size:.72rem;color:rgba(255,255,255,.72);"></span>
+      </div>
+      <div class="sched-table-scroll">
+        <table class="sched-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Due Date</th><th>Bal. Before</th>
+              <th>Interest</th><th>Principal</th><th>Payment</th>
+              <th>Bal. After</th><th>Outstanding</th><th>Status</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="schedTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Record Payment</h2>
+      <button class="modal-close" data-close="paymentModal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="pay-tabs">
+        <button class="pay-tab active" data-type="scheduled">Scheduled</button>
+        <button class="pay-tab" data-type="catchup">Catch Up</button>
+        <button class="pay-tab" data-type="fullpayoff">Full Payoff</button>
+        <button class="pay-tab" data-type="custom">Custom</button>
+      </div>
+      <div style="display:grid;gap:.85rem;">
+        <div class="form-group">
+          <label class="form-label">Payment Amount (₱)</label>
+          <input class="form-input" type="number" id="pmtAmount" min="0" step="0.01" placeholder="0.00"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Interest Value (₱) <span style="font-weight:400;text-transform:none;font-size:.68rem;color:var(--text3);">Balance × Rate</span></label>
+          <div style="display:flex;gap:.5rem;">
+            <input class="form-input" type="number" id="pmtInterest" min="0" step="0.01" placeholder="0.00" style="flex:1;"/>
+            <button class="btn btn-ghost btn-sm" id="pmtCalcInterest">Calc</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Penalty Fee (₱) <span style="font-weight:400;text-transform:none;font-size:.68rem;color:var(--text3);">optional</span></label>
+          <input class="form-input" type="number" id="pmtPenalty" min="0" step="0.01" placeholder="0.00"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Payment Date</label>
+          <input class="form-input" type="date" id="pmtDate"/>
+        </div>
+        <div class="calc-box" id="pmtPreview" style="display:none;">
+          <div>
+            <div class="calc-lbl">Balance After Payment</div>
+            <div id="pmtBalAfter" style="font-size:.75rem;color:var(--text3);"></div>
+          </div>
+          <div class="calc-val" id="pmtBalAfterVal">₱0.00</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close="paymentModal">Cancel</button>
+      <button class="btn btn-primary" id="savePaymentBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Save Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE MODAL -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-body" style="padding:1.75rem;">
+      <div class="confirm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></div>
+      <div class="confirm-text">
+        <div class="confirm-title">Delete Payment?</div>
+        <div class="confirm-body" id="confirmBody">This will delete the payment and recalculate all subsequent balances. This action cannot be undone.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close="confirmModal">Cancel</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- html2canvas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script type="module">
+import { initializeApp }    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signOut, onAuthStateChanged }
+                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, getDocs, getDoc, doc, addDoc, updateDoc, deleteDoc,
+         query, where, orderBy, serverTimestamp }
+                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig={apiKey:"AIzaSyBjYXRXK2lGBdUiWku1rae7MTpYl3bl0hw",authDomain:"lending-management-app-460f5.firebaseapp.com",projectId:"lending-management-app-460f5",storageBucket:"lending-management-app-460f5.firebasestorage.app",messagingSenderId:"167550754445",appId:"1:167550754445:web:e1548d3b0f52b751ed0cc4"};
+const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+
+/* ── Helpers ── */
+const fmt=n=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP',minimumFractionDigits:2}).format(n||0);
+const fmtDate=d=>{if(!d)return'—';const dt=d.toDate?d.toDate():new Date(d);return dt.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});};
+const toDate=ts=>{if(!ts)return null;if(ts.toDate)return ts.toDate();return new Date(ts);};
+const toast=(msg,type='info',dur=3200)=>{const el=document.createElement('div');el.className=`toast toast-${type}`;el.textContent=msg;document.getElementById('toastContainer').appendChild(el);setTimeout(()=>{el.style.animation='toastOut .3s ease forwards';setTimeout(()=>el.remove(),300);},dur);};
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const advDate=(d,terms)=>{const dt=new Date(d);if(terms==='Monthly')dt.setMonth(dt.getMonth()+1);else if(terms==='Semi Monthly')dt.setDate(dt.getDate()+15);else dt.setDate(dt.getDate()+7);return dt;};
+
+/* ── Auth ── */
+onAuthStateChanged(auth,async user=>{
+  if(!user){window.location.href='login.html';return;}
+  let sess=sessionStorage.getItem('lma_user');
+  if(!sess){const snap=await getDoc(doc(db,'user_roles',user.uid));const role=snap.exists()?snap.data().role:'pending';if(role==='pending'){window.location.href='login.html';return;}sessionStorage.setItem('lma_user',JSON.stringify({uid:user.uid,email:user.email,displayName:user.displayName,photoURL:user.photoURL,role}));}
+  const info=JSON.parse(sessionStorage.getItem('lma_user'));
+  if(info.role==='pending'){window.location.href='login.html';return;}
+  initUI(info); loadClients();
+});
+
+function initUI(info){
+  document.getElementById('userName').textContent=info.displayName||'User';
+  document.getElementById('userEmail').textContent=info.email||'';
+  const rb=document.getElementById('roleBadge');rb.textContent=info.role;rb.className=`role-badge ${info.role}`;
+  const av=document.getElementById('userAvatar');if(info.photoURL)av.innerHTML=`<img src="${info.photoURL}" alt=""/>`;else av.textContent=(info.displayName||'U')[0].toUpperCase();
+  if(info.role==='admin')document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
+  window._isAdmin=info.role==='admin';
+}
+const now=new Date();
+document.getElementById('dateWidget').textContent=`${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+document.getElementById('logoutBtn').addEventListener('click',async()=>{await signOut(auth);sessionStorage.removeItem('lma_user');window.location.href='login.html';});
+
+/* ── Theme ── */
+(function(){const root=document.documentElement,sw=document.getElementById('themeSwitch'),sunT=document.getElementById('topIconSun'),moonT=document.getElementById('topIconMoon');
+function apply(t){root.setAttribute('data-theme',t);localStorage.setItem('lma_theme',t);sw.classList.toggle('on',t==='dark');if(sunT){sunT.style.display=t==='dark'?'none':'';moonT.style.display=t==='dark'?'':'none';}}
+apply(localStorage.getItem('lma_theme')||'light');
+sw.addEventListener('click',()=>apply(root.getAttribute('data-theme')==='dark'?'light':'dark'));
+document.getElementById('menuThemeBtn')?.addEventListener('click',()=>apply(root.getAttribute('data-theme')==='dark'?'light':'dark'));})();
+
+/* ── Sidebar ── */
+const sidebar=document.getElementById('sidebar'),overlay=document.getElementById('sidebarOverlay');
+document.getElementById('menuBtn')?.addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('show');});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('show');});
+
+/* ── Modal helpers ── */
+const openModal=id=>document.getElementById(id).classList.add('open');
+const closeModal=id=>document.getElementById(id).classList.remove('open');
+document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',()=>closeModal(btn.dataset.close)));
+document.querySelectorAll('.modal-overlay').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open');}));
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let allBorrowers=[],allLoans=[],currentBorrower=null,currentLoan=null,currentPayments=[];
+let pendingDeleteId=null;
+
+/* ── Load clients ── */
+async function loadClients(){
+  const snap=await getDocs(collection(db,'borrowers'));
+  allBorrowers=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>`${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
+  const snap2=await getDocs(collection(db,'loans'));
+  allLoans=snap2.docs.map(d=>({id:d.id,...d.data()}));
+  renderClientList(allBorrowers);
+}
+
+function renderClientList(list){
+  const el=document.getElementById('clientList');
+  if(!list.length){el.innerHTML='<div style="padding:2rem;text-align:center;color:var(--text3);">No clients found.</div>';return;}
+  el.innerHTML=list.map((b,i)=>{
+    const loans=allLoans.filter(l=>l.borrowerId===b.id);
+    const activeLoans=loans.filter(l=>l.status==='active');
+    const initials=(`${b.firstName||''} ${b.lastName||''}`).trim().split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    return `<div class="client-item" data-id="${b.id}" style="animation-delay:${i*.03}s;">
+      <div class="client-avatar">${initials}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="client-name">${b.firstName} ${b.lastName}</div>
+        <div class="client-meta">${b.clientNumber||''} · ${b.phone||''} · ${b.company||''}</div>
+      </div>
+      <span class="client-badge ${activeLoans.length>0?'has-loans':''}">${loans.length} loan${loans.length!==1?'s':''}</span>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('.client-item').forEach(item=>{
+    item.addEventListener('click',()=>selectClient(item.dataset.id));
+  });
+}
+
+/* Search */
+document.getElementById('clientSearch').addEventListener('input',function(){
+  const q=this.value.toLowerCase();
+  const filtered=allBorrowers.filter(b=>(`${b.firstName} ${b.lastName} ${b.clientNumber||''}`).toLowerCase().includes(q));
+  renderClientList(filtered);
+});
+
+/* ── Select client → show loans ── */
+function selectClient(id){
+  currentBorrower=allBorrowers.find(b=>b.id===id);
+  if(!currentBorrower)return;
+  showView('loanList');
+
+  const initials=(`${currentBorrower.firstName||''} ${currentBorrower.lastName||''}`).trim().split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('clientInfoBanner').innerHTML=`
+    <div class="cib-avatar">${initials}</div>
+    <div><div class="cib-name">${currentBorrower.firstName} ${currentBorrower.lastName}</div>
+    <div class="cib-sub">${currentBorrower.clientNumber||''} · ${currentBorrower.phone||''} · ${currentBorrower.company||''}</div></div>`;
+
+  const loans=allLoans.filter(l=>l.borrowerId===id).sort((a,b)=>{
+    const da=toDate(a.startDate||a.createdAt),db=toDate(b.startDate||b.createdAt);return(db||0)-(da||0);
+  });
+  document.getElementById('loansCount').textContent=`${loans.length} loan${loans.length!==1?'s':''}`;
+
+  const paySnaps=Promise.all(loans.map(l=>getDocs(query(collection(db,'payments'),where('loanId','==',l.id)))));
+  paySnaps.then(snaps=>{
+    const tbody=document.getElementById('loanListTbody');
+    if(!loans.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text3);">No loans found.</td></tr>';return;}
+    tbody.innerHTML=loans.map((l,i)=>{
+      const pmts=snaps[i].docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>{const da=toDate(a.paymentDate||a.createdAt),db=toDate(b.paymentDate||b.createdAt);return(db||0)-(da||0);});
+      const totalPaid=pmts.reduce((s,p)=>s+(p.amountPaid||0),0);
+      const lastPmt=pmts[0];
+      const pill=l.status==='paid'?'pill-paid':l.status==='past_due'?'pill-past':'pill-active';
+      const pillLabel=l.status==='paid'?'Paid':l.status==='past_due'?'Past Due':'Active';
+      return `<tr>
+        <td class="td-mono">${l.loanNumber||l.id}</td>
+        <td>${fmtDate(l.disbursementDate||l.startDate)}</td>
+        <td class="td-bold">${fmt(l.principal)}</td>
+        <td>${lastPmt?fmtDate(lastPmt.paymentDate||lastPmt.createdAt):'—'}</td>
+        <td class="td-green">${fmt(totalPaid)}</td>
+        <td><span class="status-pill ${pill}">${pillLabel}</span></td>
+        <td><button class="select-loan-btn" data-loanid="${l.id}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:.75rem;height:.75rem;"><polyline points="9 18 15 12 9 6"/></svg>View Schedule
+        </button></td>
+      </tr>`;
+    }).join('');
+    document.querySelectorAll('.select-loan-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>selectLoan(btn.dataset.loanid));
+    });
+  });
+}
+
+/* ── Select loan → show schedule ── */
+async function selectLoan(loanId){
+  currentLoan=allLoans.find(l=>l.id===loanId);
+  if(!currentLoan)return;
+  showView('schedule');
+  await loadAndRenderSchedule();
+}
+
+async function loadAndRenderSchedule(){
+  const l=currentLoan;
+  const snap=await getDocs(query(collection(db,'payments'),where('loanId','==',l.id)));
+  currentPayments=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>{
+    const da=toDate(a.paymentDate||a.createdAt),db=toDate(b.paymentDate||b.createdAt);return(da||0)-(db||0);
+  });
+  renderScheduleView();
+}
+
+/* ── Navigate views ── */
+function showView(view){
+  document.getElementById('viewClientList').style.display=view==='clientList'?'block':'none';
+  document.getElementById('viewLoanList').style.display=view==='loanList'?'block':'none';
+  document.getElementById('viewSchedule').style.display=view==='schedule'?'block':'none';
+}
+document.getElementById('backToClients').addEventListener('click',()=>showView('clientList'));
+document.getElementById('backToLoans').addEventListener('click',()=>showView('loanList'));
+
+/* ══════════════════════════════════════════
+   SCHEDULE RENDERING
+══════════════════════════════════════════ */
+function calcFixedPayment(P,r,n){if(r===0)return P/n;return(P*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);}
+
+function renderScheduleView(){
+  const l=currentLoan, b=currentBorrower;
+  const P=l.principal||0, r=(l.interestRate||0)/100;
+  const n=l.numPayments||1;
+  const fixedPmt=calcFixedPayment(P,r,n);
+  const paidCount=currentPayments.length;
+  const today=new Date(); today.setHours(0,0,0,0);
+
+  /* Sched header */
+  document.getElementById('schedTitle').textContent=`${l.loanNumber||l.id} — ${b.firstName} ${b.lastName}`;
+  document.getElementById('schedSubtitle').textContent=`${l.terms} · ${l.interestRate}% · ${paidCount}/${n} paid`;
+
+  /* Total outstanding (diminishing) */
+  const bal=l.currentBalance||0;
+  const outstanding=bal+(bal*r);
+
+  /* 7 Info cards */
+  const origN=l.originalNumPayments||n;
+  const projNeeded=Math.max(0,n-paidCount);
+  document.getElementById('infoCards').innerHTML=`
+    <div class="ic"><div class="ic-lbl">Principal</div><div class="ic-val">${fmt(P)}</div></div>
+    <div class="ic"><div class="ic-lbl">Rate</div><div class="ic-val">${l.interestRate}%</div></div>
+    <div class="ic"><div class="ic-lbl">Terms</div><div class="ic-val">${l.terms}</div></div>
+    <div class="ic"><div class="ic-lbl">Original Pmts</div><div class="ic-val">${origN}</div></div>
+    <div class="ic"><div class="ic-lbl">Adjusted Pmts</div><div class="ic-val">${n}</div></div>
+    <div class="ic"><div class="ic-lbl">Projected Left</div><div class="ic-val" style="color:var(--primary);">${projNeeded}</div></div>
+    <div class="ic"><div class="ic-lbl">Outstanding</div><div class="ic-val" style="color:var(--danger);">${fmt(outstanding)}</div></div>`;
+
+  /* Compute due dates & overdue */
+  let firstDue=toDate(l.firstPaymentDate);
+  if(!firstDue){firstDue=new Date();firstDue.setMonth(firstDue.getMonth()+1);}
+  firstDue.setHours(0,0,0,0);
+
+  // Build due date list
+  const dueDates=[];
+  let d=new Date(firstDue);
+  for(let i=0;i<n;i++){dueDates.push(new Date(d));d=advDate(d,l.terms);}
+
+  // Check overdue
+  let overdueCount=0, firstOverdueDate=null;
+  for(let i=paidCount;i<n;i++){
+    if(dueDates[i]<today){
+      overdueCount++;
+      if(!firstOverdueDate)firstOverdueDate=dueDates[i];
+    }
+  }
+  const daysOverdue=firstOverdueDate?Math.floor((today-firstOverdueDate)/(1000*60*60*24)):0;
+  const balGrowthPct=P>0?((bal-P)/P*100).toFixed(1):0;
+
+  /* Overdue alert */
+  const alertEl=document.getElementById('overdueAlert');
+  if(overdueCount>0){
+    alertEl.style.display='';
+    let cls='ab-overdue', title='⚠️ Overdue', severity='Overdue';
+    if(overdueCount>=6||daysOverdue>180){cls='ab-severe';title='🔥 Severe Default';severity='Severe';}
+    else if(overdueCount>=4){cls='ab-default';title='🚨 Default';severity='Default';}
+    else if(overdueCount>=2){cls='ab-delinquent';title='❗ Delinquent';severity='Delinquent';}
+    alertEl.innerHTML=`<div class="alert-banner ${cls}">
+      <div class="ab-title">${title} — ${severity} Status</div>
+      <div class="ab-body">This loan has ${overdueCount} missed payment${overdueCount!==1?'s':''} totalling ${daysOverdue} days overdue.</div>
+      <div class="ab-stats">
+        <span class="ab-stat">Missed: <strong>${overdueCount}</strong></span>
+        <span class="ab-stat">Days Overdue: <strong>${daysOverdue}d</strong></span>
+        <span class="ab-stat">Balance: <strong>${fmt(bal)}</strong></span>
+      </div>
+    </div>`;
+  } else { alertEl.style.display='none'; }
+
+  /* Restructure panel (2+ overdue) */
+  const restructEl=document.getElementById('restructurePanel');
+  restructEl.style.display=overdueCount>=2?'block':'none';
+  if(overdueCount>=2){
+    document.getElementById('restructMonths').value='';
+    document.getElementById('restructRate').value=l.interestRate||'';
+    document.getElementById('restructPreview').style.display='none';
+    document.getElementById('btnApplyRestruct').style.display='none';
+  }
+
+  /* Extension banner */
+  const extEl=document.getElementById('extBanner');
+  if(bal>0.01&&paidCount>=n){
+    extEl.style.display='';
+    extEl.innerHTML=`<div class="ext-banner">
+      <span class="ext-text">⚠️ Schedule Extension Needed — balance of ${fmt(bal)} remains after ${n} payments.</span>
+      <div style="display:flex;gap:.5rem;">
+        <button class="btn btn-warn btn-sm" id="btnAdjustSched">Adjust Schedule</button>
+        ${l.originalNumPayments?`<button class="btn btn-ghost btn-sm" id="btnDeleteAdj">Delete Adjustment</button>`:''}
+      </div>
+    </div>`;
+    document.getElementById('btnAdjustSched')?.addEventListener('click',adjustSchedule);
+    document.getElementById('btnDeleteAdj')?.addEventListener('click',deleteAdjustment);
+  } else { extEl.style.display='none'; }
+
+  /* Build table */
+  document.getElementById('schedTableSub').textContent=`${paidCount} paid · ${Math.max(0,n-paidCount)} remaining`;
+  const tbody=document.getElementById('schedTbody');
+  let rows='', runBal=P;
+
+  for(let i=0;i<n;i++){
+    const dueDate=dueDates[i];
+    const isPaid=i<paidCount;
+    const isOverdue=!isPaid&&dueDate<today;
+    const isNext=!isPaid&&i===paidCount;
+
+    let interest=runBal*r;
+    let principalPaid=fixedPmt-interest;
+    let newBal=Math.max(0,runBal-principalPaid);
+    let outstanding_row=newBal+(newBal*r);
+
+    let rowClass='row-upcoming', badge=`<span class="row-badge rb-upcoming">#${i+1}</span>`;
+
+    if(isPaid){
+      const p=currentPayments[i];
+      const actualInt=p.interestValue||0;
+      const actualPmt=p.amountPaid||0;
+      const balBefore=p.balanceBefore||runBal;
+      const balAfter=p.balanceAfter||Math.max(0,balBefore-(actualPmt-actualInt));
+      const os=balAfter+(balAfter*r);
+      const delBtn=window._isAdmin?`<button class="delete-pmt-btn" data-pmtid="${p.id}">🗑</button>`:'';
+      rows+=`<tr class="row-paid">
+        <td><span class="row-badge rb-paid">✓ ${i+1}</span></td>
+        <td style="text-align:left;">${fmtDate(dueDate)}</td>
+        <td>${fmt(balBefore)}</td>
+        <td class="td-amber">${fmt(actualInt)}</td>
+        <td>${fmt(actualPmt-actualInt)}</td>
+        <td class="td-green">${fmt(actualPmt)}</td>
+        <td class="td-red">${fmt(balAfter)}</td>
+        <td>${fmt(os)}</td>
+        <td><span class="row-badge rb-paid">Paid</span></td>
+        <td>${delBtn}</td>
+      </tr>`;
+      runBal=balAfter;
+      continue;
+    }
+
+    if(isOverdue){rowClass='row-overdue';badge=`<span class="row-badge rb-overdue">! ${i+1}</span>`;}
+    else if(isNext){rowClass='row-current';badge=`<span class="row-badge rb-current">→ ${i+1}</span>`;}
+
+    const payBtn=`<button class="pay-row-btn" data-rowindex="${i}">Pay</button>`;
+    rows+=`<tr class="${rowClass}">
+      <td>${badge}</td>
+      <td style="text-align:left;">${fmtDate(dueDate)}</td>
+      <td>${fmt(runBal)}</td>
+      <td class="td-amber">${fmt(interest)}</td>
+      <td>${fmt(Math.max(0,principalPaid))}</td>
+      <td>${isOverdue?`<span style="color:var(--danger);font-size:.7rem;">OVERDUE</span>`:fmt(fixedPmt)}</td>
+      <td>${fmt(newBal)}</td>
+      <td>${fmt(outstanding_row)}</td>
+      <td><span class="row-badge ${isOverdue?'rb-overdue':isNext?'rb-current':'rb-upcoming'}">${isOverdue?'Overdue':isNext?'Current':'Upcoming'}</span></td>
+      <td>${payBtn}</td>
+    </tr>`;
+    runBal=newBal;
+  }
+
+  tbody.innerHTML=rows;
+
+  /* Delete payment buttons */
+  document.querySelectorAll('.delete-pmt-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>confirmDeletePayment(btn.dataset.pmtid));
+  });
+
+  /* Pay row buttons */
+  document.querySelectorAll('.pay-row-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>openPaymentModal());
+  });
+}
+
+/* ══════════════════════════════════════════
+   PAYMENT MODAL
+══════════════════════════════════════════ */
+let currentPayType='scheduled';
+
+document.getElementById('btnRecordPayment').addEventListener('click',openPaymentModal);
+
+function openPaymentModal(){
+  if(!currentLoan)return;
+  const l=currentLoan;
+  const r=(l.interestRate||0)/100;
+  const interest=+(l.currentBalance*r).toFixed(2);
+  document.getElementById('pmtInterest').value=interest;
+  document.getElementById('pmtDate').value=new Date().toISOString().split('T')[0];
+  setPayType('scheduled');
+  openModal('paymentModal');
+  updatePmtPreview();
+}
+
+/* Pay tabs */
+document.querySelectorAll('.pay-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>setPayType(tab.dataset.type));
+});
+
+function setPayType(type){
+  currentPayType=type;
+  document.querySelectorAll('.pay-tab').forEach(t=>t.classList.toggle('active',t.dataset.type===type));
+  const l=currentLoan; if(!l)return;
+  const r=(l.interestRate||0)/100;
+  const P=l.principal||0, n=l.numPayments||1;
+  const fixedPmt=calcFixedPayment(P,r,n);
+  const bal=l.currentBalance||0;
+  const interest=bal*r;
+
+  if(type==='scheduled'){document.getElementById('pmtAmount').value=fixedPmt.toFixed(2);document.getElementById('pmtInterest').value=interest.toFixed(2);}
+  else if(type==='catchup'){
+    const overduePmts=Math.max(1,(currentPayments.length<n)?1:0);
+    document.getElementById('pmtAmount').value=(fixedPmt*overduePmts).toFixed(2);
+    document.getElementById('pmtInterest').value=interest.toFixed(2);
+  }
+  else if(type==='fullpayoff'){document.getElementById('pmtAmount').value=(bal+interest).toFixed(2);document.getElementById('pmtInterest').value=interest.toFixed(2);}
+  else{document.getElementById('pmtAmount').value='';document.getElementById('pmtInterest').value=interest.toFixed(2);}
+  updatePmtPreview();
+}
+
+document.getElementById('pmtCalcInterest').addEventListener('click',()=>{
+  if(!currentLoan)return;
+  const r=(currentLoan.interestRate||0)/100;
+  document.getElementById('pmtInterest').value=(currentLoan.currentBalance*r).toFixed(2);
+  updatePmtPreview();
+});
+document.getElementById('pmtAmount').addEventListener('input',updatePmtPreview);
+document.getElementById('pmtInterest').addEventListener('input',updatePmtPreview);
+
+function updatePmtPreview(){
+  const amt=parseFloat(document.getElementById('pmtAmount').value)||0;
+  const int=parseFloat(document.getElementById('pmtInterest').value)||0;
+  const pen=parseFloat(document.getElementById('pmtPenalty').value)||0;
+  const prev=document.getElementById('pmtPreview');
+  if(amt>0&&currentLoan){
+    const bal=currentLoan.currentBalance||0;
+    const principalPaid=amt-int;
+    const after=Math.max(0,bal-principalPaid);
+    prev.style.display='';
+    document.getElementById('pmtBalAfterVal').textContent=fmt(after);
+    document.getElementById('pmtBalAfter').textContent=`${fmt(bal)} − ${fmt(principalPaid)} principal`;
+  } else { prev.style.display='none'; }
+}
+
+document.getElementById('savePaymentBtn').addEventListener('click',async()=>{
+  const l=currentLoan; if(!l)return;
+  const amountPaid=parseFloat(document.getElementById('pmtAmount').value)||0;
+  const interestVal=parseFloat(document.getElementById('pmtInterest').value)||0;
+  const penalty=parseFloat(document.getElementById('pmtPenalty').value)||0;
+  const payDate=document.getElementById('pmtDate').value;
+  if(!amountPaid||!payDate){toast('Fill in amount and date.','error');return;}
+
+  const btn=document.getElementById('savePaymentBtn');
+  btn.disabled=true;btn.textContent='Saving…';
+  try{
+    const principalPaid=amountPaid-interestVal;
+    const balanceBefore=l.currentBalance||0;
+    const balanceAfter=Math.max(0,balanceBefore-principalPaid);
+    await addDoc(collection(db,'payments'),{
+      loanId:l.id,borrowerId:l.borrowerId,
+      amountPaid,interestValue:interestVal,penaltyFee:penalty||0,
+      balanceBefore,balanceAfter,paymentDate:payDate,createdAt:serverTimestamp()
+    });
+    const newStatus=balanceAfter<=0?'paid':'active';
+    await updateDoc(doc(db,'loans',l.id),{currentBalance:balanceAfter,status:newStatus});
+    currentLoan={...currentLoan,currentBalance:balanceAfter,status:newStatus};
+    allLoans=allLoans.map(x=>x.id===l.id?currentLoan:x);
+    closeModal('paymentModal');
+    toast(`Payment of ${fmt(amountPaid)} recorded! 🎉`,'success');
+    await loadAndRenderSchedule();
+  }catch(err){toast('Error: '+err.message,'error');}
+  finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Save Payment';}
+});
+
+/* ══════════════════════════════════════════
+   DELETE PAYMENT
+══════════════════════════════════════════ */
+function confirmDeletePayment(pmtId){
+  pendingDeleteId=pmtId;
+  const p=currentPayments.find(x=>x.id===pmtId);
+  document.getElementById('confirmBody').textContent=p?`Delete payment of ${fmt(p.amountPaid)} on ${fmtDate(p.paymentDate||p.createdAt)}? All subsequent balances will be recalculated.`:'Delete this payment and recalculate subsequent balances?';
+  openModal('confirmModal');
+}
+
+document.getElementById('confirmDeleteBtn').addEventListener('click',async()=>{
+  if(!pendingDeleteId||!currentLoan)return;
+  const btn=document.getElementById('confirmDeleteBtn');
+  btn.disabled=true;btn.textContent='Deleting…';
+  try{
+    await deleteDoc(doc(db,'payments',pendingDeleteId));
+    // Recalculate chain
+    const remaining=currentPayments.filter(p=>p.id!==pendingDeleteId).sort((a,b)=>{const da=toDate(a.paymentDate||a.createdAt),db=toDate(b.paymentDate||b.createdAt);return(da||0)-(db||0);});
+    let runBal=currentLoan.principal||0;
+    for(const p of remaining){
+      const principalPaid=(p.amountPaid||0)-(p.interestValue||0);
+      const newBal=Math.max(0,runBal-principalPaid);
+      await updateDoc(doc(db,'payments',p.id),{balanceBefore:runBal,balanceAfter:newBal});
+      runBal=newBal;
+    }
+    const newStatus=runBal<=0?'paid':'active';
+    await updateDoc(doc(db,'loans',currentLoan.id),{currentBalance:runBal,status:newStatus});
+    currentLoan={...currentLoan,currentBalance:runBal,status:newStatus};
+    allLoans=allLoans.map(x=>x.id===currentLoan.id?currentLoan:x);
+    closeModal('confirmModal');
+    toast('Payment deleted and balances recalculated.','success');
+    await loadAndRenderSchedule();
+  }catch(err){toast('Error: '+err.message,'error');}
+  finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Delete';}
+});
+
+/* ══════════════════════════════════════════
+   ADJUST SCHEDULE
+══════════════════════════════════════════ */
+async function adjustSchedule(){
+  const l=currentLoan;
+  const needed=prompt(`Current balance: ${fmt(l.currentBalance)}\nEnter new total number of payments:`);
+  if(!needed||isNaN(+needed))return;
+  const newN=Math.max(currentPayments.length+1,parseInt(needed));
+  const orig=l.originalNumPayments||l.numPayments;
+  await updateDoc(doc(db,'loans',l.id),{numPayments:newN,originalNumPayments:orig});
+  currentLoan={...currentLoan,numPayments:newN,originalNumPayments:orig};
+  allLoans=allLoans.map(x=>x.id===l.id?currentLoan:x);
+  toast(`Schedule adjusted to ${newN} payments.`,'success');
+  await loadAndRenderSchedule();
+}
+
+async function deleteAdjustment(){
+  const l=currentLoan;
+  const orig=l.originalNumPayments||l.numPayments;
+  await updateDoc(doc(db,'loans',l.id),{numPayments:orig,originalNumPayments:null});
+  currentLoan={...currentLoan,numPayments:orig,originalNumPayments:null};
+  allLoans=allLoans.map(x=>x.id===l.id?currentLoan:x);
+  toast('Adjustment reverted.','info');
+  await loadAndRenderSchedule();
+}
+
+/* ══════════════════════════════════════════
+   RESTRUCTURE
+══════════════════════════════════════════ */
+document.getElementById('btnCalculateRestruct').addEventListener('click',()=>{
+  const l=currentLoan;if(!l)return;
+  const months=parseFloat(document.getElementById('restructMonths').value)||0;
+  const rate=parseFloat(document.getElementById('restructRate').value)||0;
+  if(!months||!rate){toast('Enter months and rate.','error');return;}
+
+  const P=l.currentBalance||0;
+  const r=rate/100;
+  const terms=l.terms;
+  const n=terms==='Monthly'?months:terms==='Semi Monthly'?months*2:months*4;
+  const nInt=Math.round(n);
+  const fixedPmt=calcFixedPayment(P,r,nInt);
+  const totalAmt=fixedPmt*nInt;
+  const totalInt=totalAmt-P;
+
+  let rows='',runBal=P;
+  for(let i=0;i<Math.min(nInt,12);i++){
+    const int=runBal*r;
+    const prin=fixedPmt-int;
+    const after=Math.max(0,runBal-prin);
+    rows+=`<tr style="background:${i%2===0?'rgba(234,179,8,.04)':'transparent'};">
+      <td style="text-align:center;">${i+1}</td>
+      <td>${fmt(runBal)}</td><td>${fmt(int)}</td>
+      <td>${fmt(prin)}</td><td>${fmt(fixedPmt)}</td><td>${fmt(after)}</td>
+    </tr>`;
+    runBal=after;
+  }
+  if(nInt>12)rows+=`<tr><td colspan="6" style="text-align:center;color:var(--text3);font-style:italic;font-size:.72rem;">…and ${nInt-12} more payments</td></tr>`;
+
+  const prevEl=document.getElementById('restructPreview');
+  prevEl.style.display='';
+  prevEl.innerHTML=`<div style="display:flex;gap:1rem;margin-bottom:.75rem;flex-wrap:wrap;">
+    <div style="font-size:.78rem;"><span style="color:var(--text3);">Total Payments:</span> <strong>${nInt}</strong></div>
+    <div style="font-size:.78rem;"><span style="color:var(--text3);">Total Amount:</span> <strong style="color:var(--primary);">${fmt(totalAmt)}</strong></div>
+    <div style="font-size:.78rem;"><span style="color:var(--text3);">Total Interest:</span> <strong style="color:#d97706;">${fmt(totalInt)}</strong></div>
+  </div>
+  <div class="restruct-preview">
+    <div class="restruct-preview-header"><span>Preview Schedule</span><span>Fixed Payment: ${fmt(fixedPmt)}</span></div>
+    <div style="overflow-x:auto;max-height:240px;overflow-y:auto;">
+    <table class="restruct-preview"><thead><tr>
+      <th style="text-align:center;">#</th><th>Balance</th><th>Interest</th><th>Principal</th><th>Payment</th><th>After</th>
+    </tr></thead><tbody>${rows}</tbody></table></div></div>`;
+
+  const applyBtn=document.getElementById('btnApplyRestruct');
+  applyBtn.style.display='';
+  applyBtn._restructData={P,r,nInt,rate,fixedPmt};
+});
+
+document.getElementById('btnApplyRestruct').addEventListener('click',async function(){
+  const {P,r,nInt,rate}=this._restructData;
+  const l=currentLoan;
+  const orig=l.originalNumPayments||l.numPayments;
+  await updateDoc(doc(db,'loans',l.id),{
+    numPayments:nInt,interestRate:rate,
+    currentBalance:P,originalNumPayments:orig
+  });
+  currentLoan={...currentLoan,numPayments:nInt,interestRate:rate,currentBalance:P,originalNumPayments:orig};
+  allLoans=allLoans.map(x=>x.id===l.id?currentLoan:x);
+  toast(`Loan restructured: ${nInt} payments at ${rate}%`,'success');
+  document.getElementById('restructurePanel').style.display='none';
+  await loadAndRenderSchedule();
+});
+
+/* ══════════════════════════════════════════
+   SCREENSHOT
+══════════════════════════════════════════ */
+document.getElementById('btnScreenshot').addEventListener('click',async()=>{
+  const tableEl=document.getElementById('viewSchedule');
+  try{
+    const canvas=await html2canvas(tableEl,{scale:1.5,useCORS:true,backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--surface').trim()||'#fff'});
+    const img=canvas.toDataURL('image/png');
+    const fname=`Schedule_${(currentLoan?.loanNumber||'loan').replace(/\s/g,'_')}.png`;
+    if(navigator.share&&navigator.canShare){
+      try{const res=await fetch(img);const blob=await res.blob();const file=new File([blob],fname,{type:'image/png'});if(navigator.canShare({files:[file]})){await navigator.share({files:[file]});toast('Shared!','success');return;}}catch(e){}
+    }
+    const a=document.createElement('a');a.href=img;a.download=fname;a.click();
+    toast('Schedule saved!','success');
+  }catch(err){toast('Screenshot failed: '+err.message,'error');}
+});
+</script>
+<script>(function(){const t=localStorage.getItem('lma_theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+</body>
+</html>

@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>New Borrower — Lending Management App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f4f6fb;--surface:#ffffff;--card:#eef0f5;
+  --primary:#6c3dcc;--primary-h:#5a2fb5;--primary-g:#8b5cf6;
+  --accent:#22c55e;--warn:#eab308;--danger:#ef4444;--muted:#e8eaee;
+  --text:#1a1a2e;--text2:#4b5280;--text3:#8892b0;
+  --border:rgba(108,61,204,.13);--glow:rgba(108,61,204,.15);
+  --sidebar-w:260px;--topbar-h:60px;
+  --r:1rem;--rs:.6rem;
+  --tr:.22s cubic-bezier(.4,0,.2,1);
+  --shadow:0 2px 16px rgba(108,61,204,.08),0 1px 3px rgba(0,0,0,.04);
+  --shadow-md:0 4px 28px rgba(108,61,204,.12),0 2px 6px rgba(0,0,0,.06);
+  --font-d:'Syne',sans-serif;--font-b:'Instrument Sans',sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#13111f;--surface:#1e1b30;--card:#272b3d;
+  --primary:#7c4dff;--primary-h:#6e3fef;--primary-g:#a78bfa;
+  --muted:#2e3350;--text:#f0edff;--text2:#a8b0d0;--text3:#6070a0;
+  --border:rgba(124,77,255,.18);--glow:rgba(124,77,255,.2);
+  --shadow:0 2px 16px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.2);
+  --shadow-md:0 4px 28px rgba(0,0,0,.42),0 2px 6px rgba(0,0,0,.25);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;}
+body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height:100dvh;display:flex;overflow-x:hidden;transition:background var(--tr),color var(--tr);}
+button{font-family:var(--font-b);cursor:pointer;border:none;background:none;}
+a{text-decoration:none;color:inherit;}
+input,select,textarea{font-family:var(--font-b);}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100dvh;position:fixed;left:0;top:0;z-index:200;transition:transform var(--tr),background var(--tr);overflow:hidden;}
+.sidebar-header{padding:1.25rem 1.1rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sidebar-logo{display:flex;align-items:center;gap:.65rem;}
+.sidebar-logo-icon{width:2.1rem;height:2.1rem;border-radius:.55rem;background:linear-gradient(135deg,var(--primary),var(--primary-g));display:grid;place-items:center;flex-shrink:0;}
+.sidebar-logo-icon svg{width:1.1rem;height:1.1rem;color:#fff;}
+.sidebar-logo-title{font-family:var(--font-d);font-weight:800;font-size:.78rem;line-height:1.15;color:var(--text);}
+.sidebar-logo-sub{font-size:.62rem;color:var(--text3);font-weight:500;letter-spacing:.05em;margin-top:.1rem;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:.75rem .6rem;display:flex;flex-direction:column;gap:.15rem;}
+.sidebar-nav::-webkit-scrollbar{width:3px;}
+.sidebar-nav::-webkit-scrollbar-thumb{background:var(--muted);border-radius:10px;}
+.nav-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:.5rem .65rem .25rem;margin-top:.35rem;}
+.nav-item{display:flex;align-items:center;gap:.6rem;padding:.55rem .7rem;border-radius:var(--rs);color:var(--text2);font-size:.82rem;font-weight:500;transition:var(--tr);}
+.nav-item:hover{background:var(--muted);color:var(--text);}
+.nav-item.active{background:var(--primary);color:#fff;}
+.nav-item svg{width:1rem;height:1rem;flex-shrink:0;color:var(--text3);transition:var(--tr);}
+.nav-item:hover svg,.nav-item.active svg{color:currentColor;}
+.nav-item.sub{padding-left:1.9rem;font-size:.78rem;}
+.nav-item .badge-admin{margin-left:auto;font-size:.55rem;font-weight:700;background:var(--primary);color:#fff;padding:.1rem .35rem;border-radius:100px;}
+.sidebar-footer{padding:.75rem .6rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.5rem;flex-shrink:0;}
+.theme-row{display:flex;align-items:center;justify-content:space-between;padding:.35rem .5rem;}
+.theme-label{font-size:.75rem;color:var(--text2);font-weight:500;display:flex;align-items:center;gap:.4rem;}
+.theme-label svg{width:.9rem;height:.9rem;}
+.theme-switch{width:2.4rem;height:1.3rem;border-radius:100px;background:var(--muted);border:1.5px solid var(--border);position:relative;transition:var(--tr);cursor:pointer;}
+.theme-switch.on{background:var(--primary);border-color:var(--primary);}
+.theme-switch::after{content:'';position:absolute;top:2px;left:2px;width:calc(1.3rem - 8px);height:calc(1.3rem - 8px);background:#fff;border-radius:50%;transition:var(--tr);}
+.theme-switch.on::after{transform:translateX(1.1rem);}
+.date-widget{padding:.4rem .5rem;background:var(--card);border-radius:var(--rs);font-size:.72rem;color:var(--text2);text-align:center;font-weight:500;}
+.user-row{display:flex;align-items:center;gap:.55rem;padding:.35rem .5rem;}
+.user-avatar{width:1.8rem;height:1.8rem;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-g));display:grid;place-items:center;font-size:.7rem;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;}
+.user-avatar img{width:100%;height:100%;object-fit:cover;}
+.user-name{font-size:.75rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-email{font-size:.62rem;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.role-badge{font-size:.55rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:.15rem .4rem;border-radius:100px;flex-shrink:0;}
+.role-badge.admin{background:rgba(108,61,204,.15);color:var(--primary);}
+.role-badge.user{background:var(--muted);color:var(--text2);}
+.btn-logout{display:flex;align-items:center;justify-content:center;gap:.45rem;padding:.45rem;border-radius:var(--rs);color:var(--danger);font-size:.78rem;font-weight:600;transition:var(--tr);}
+.btn-logout:hover{background:rgba(239,68,68,.08);}
+.btn-logout svg{width:.85rem;height:.85rem;}
+.sidebar-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);opacity:0;transition:opacity var(--tr);}
+.sidebar-overlay.show{opacity:1;}
+
+/* ── TOPBAR ── */
+.topbar{display:none;height:var(--topbar-h);background:var(--surface);border-bottom:1px solid var(--border);align-items:center;gap:.75rem;padding:0 1rem;position:fixed;top:0;left:0;right:0;z-index:180;}
+.topbar-title{font-family:var(--font-d);font-weight:800;font-size:.85rem;flex:1;}
+.btn-menu{width:2.2rem;height:2.2rem;border-radius:var(--rs);background:var(--card);display:grid;place-items:center;transition:var(--tr);}
+.btn-menu:hover{background:var(--muted);}
+.btn-menu svg{width:1.1rem;height:1.1rem;}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar-w);flex:1;min-width:0;display:flex;flex-direction:column;}
+.main-inner{padding:1.75rem 1.75rem 3rem;flex:1;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center;}
+.page-title{font-family:var(--font-d);font-weight:800;font-size:1.5rem;color:var(--text);}
+.page-subtitle{font-size:.8rem;color:var(--text3);margin-top:.25rem;}
+
+/* ── FORM CARD ── */
+.form-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;
+  max-width:860px;
+  animation:fadeUp .5s cubic-bezier(.34,1.26,.64,1) both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+.form-card-header{
+  padding:1.1rem 1.5rem;
+  background:linear-gradient(90deg,var(--accent),#16a34a);
+  display:flex;align-items:center;gap:.75rem;
+}
+.form-card-header svg{width:1.2rem;height:1.2rem;color:#fff;}
+.form-card-header-title{font-family:var(--font-d);font-weight:700;font-size:.95rem;color:#fff;}
+.form-card-header-sub{font-size:.72rem;color:rgba(255,255,255,.78);margin-top:.1rem;}
+
+/* ── FORM SECTIONS ── */
+.form-section{padding:1.35rem 1.5rem;border-bottom:1px solid var(--border);}
+.form-section:last-of-type{border-bottom:none;}
+.section-label{
+  font-size:.68rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:1rem;
+  display:flex;align-items:center;gap:.5rem;
+}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.section-label svg{width:.85rem;height:.85rem;color:var(--text3);}
+
+/* ── GRID ── */
+.form-grid{display:grid;gap:.9rem;}
+.g2{grid-template-columns:1fr 1fr;}
+.g3{grid-template-columns:1fr 1fr 1fr;}
+.span2{grid-column:span 2;}
+.span3{grid-column:span 3;}
+
+/* ── FORM ELEMENTS ── */
+.form-group{display:flex;flex-direction:column;gap:.32rem;}
+.form-label{
+  font-size:.7rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--text2);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.req{color:var(--danger);margin-left:.2rem;}
+.form-hint-inline{font-size:.65rem;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;}
+.form-input,.form-select,.form-textarea{
+  padding:.6rem .9rem;border-radius:var(--rs);
+  border:1.5px solid var(--border);background:var(--card);
+  color:var(--text);font-size:.85rem;font-family:var(--font-b);
+  transition:var(--tr);width:100%;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{
+  outline:none;border-color:var(--primary);
+  box-shadow:0 0 0 3px var(--glow);background:var(--surface);
+}
+.form-input.error,.form-textarea.error{border-color:var(--danger);box-shadow:0 0 0 3px rgba(239,68,68,.12);}
+.form-input::placeholder,.form-textarea::placeholder{color:var(--text3);}
+.form-textarea{resize:vertical;min-height:80px;}
+.form-select{
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238892b0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .75rem center;padding-right:2.2rem;
+}
+.form-error{font-size:.7rem;color:var(--danger);font-weight:500;display:none;margin-top:.2rem;}
+.form-error.show{display:block;}
+
+/* ── CLIENT NUMBER PREVIEW ── */
+.cn-preview{
+  display:flex;align-items:center;gap:.6rem;
+  background:rgba(108,61,204,.06);border:1px solid var(--border);
+  border-radius:var(--rs);padding:.65rem 1rem;
+  animation:fadeUp .35s ease both;
+}
+.cn-icon{width:2rem;height:2rem;border-radius:.45rem;background:rgba(108,61,204,.12);display:grid;place-items:center;}
+.cn-icon svg{width:.95rem;height:.95rem;color:var(--primary);}
+.cn-label{font-size:.68rem;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.cn-value{font-family:var(--font-d);font-weight:800;font-size:1rem;color:var(--primary);}
+
+/* ── AVATAR PREVIEW ── */
+.avatar-preview-row{display:flex;align-items:center;gap:.85rem;padding:.75rem 0;}
+.avatar-circle{
+  width:3.5rem;height:3.5rem;border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--primary-g));
+  display:grid;place-items:center;
+  font-family:var(--font-d);font-weight:800;font-size:1.15rem;color:#fff;
+  flex-shrink:0;transition:var(--tr);
+}
+.avatar-info{font-size:.78rem;color:var(--text2);}
+.avatar-name{font-family:var(--font-d);font-weight:700;font-size:.9rem;color:var(--text);}
+
+/* ── FORM FOOTER ── */
+.form-footer{
+  padding:1.1rem 1.5rem;background:var(--card);border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;
+}
+.form-footer-hint{font-size:.75rem;color:var(--text3);display:flex;align-items:center;gap:.4rem;}
+.form-footer-hint svg{width:.85rem;height:.85rem;}
+.form-footer-actions{display:flex;gap:.65rem;align-items:center;}
+.btn{display:inline-flex;align-items:center;gap:.45rem;padding:.58rem 1.15rem;border-radius:var(--rs);font-size:.83rem;font-weight:700;transition:var(--tr);white-space:nowrap;letter-spacing:.01em;}
+.btn svg{width:.9rem;height:.9rem;}
+.btn-success{background:var(--accent);color:#fff;}
+.btn-success:hover{background:#16a34a;box-shadow:0 4px 18px rgba(34,197,94,.35);transform:translateY(-1px);}
+.btn-success:active{transform:translateY(0);}
+.btn-success:disabled{opacity:.55;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
+.btn-ghost{background:var(--surface);color:var(--text2);border:1.5px solid var(--border);}
+.btn-ghost:hover{background:var(--muted);}
+
+/* ── SUCCESS STATE ── */
+.success-banner{
+  display:none;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:2.5rem 1.5rem;text-align:center;
+  box-shadow:var(--shadow-md);max-width:860px;
+  animation:fadeUp .4s ease both;
+}
+.success-banner.show{display:block;}
+.success-icon{
+  width:4rem;height:4rem;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),#16a34a);
+  display:grid;place-items:center;margin:0 auto 1.1rem;
+  box-shadow:0 6px 20px rgba(34,197,94,.3);
+  animation:iconPop .5s .1s cubic-bezier(.34,1.56,.64,1) both;
+}
+.success-icon svg{width:1.75rem;height:1.75rem;color:#fff;}
+@keyframes iconPop{from{opacity:0;transform:scale(.5);}to{opacity:1;transform:scale(1);}}
+.success-title{font-family:var(--font-d);font-weight:800;font-size:1.15rem;color:var(--text);margin-bottom:.4rem;}
+.success-body{font-size:.85rem;color:var(--text3);margin-bottom:1.25rem;line-height:1.6;}
+.success-cn{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.5rem 1.25rem;border-radius:100px;
+  background:rgba(108,61,204,.1);color:var(--primary);
+  font-family:var(--font-d);font-weight:800;font-size:1rem;
+  margin-bottom:1.5rem;
+}
+.success-actions{display:flex;gap:.65rem;justify-content:center;flex-wrap:wrap;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-h);box-shadow:0 4px 16px var(--glow);transform:translateY(-1px);}
+
+/* ── TOAST ── */
+.toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;pointer-events:none;}
+.toast{padding:.65rem 1.1rem;border-radius:var(--rs);font-size:.8rem;font-weight:600;color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.25);animation:toastIn .3s ease both;pointer-events:auto;max-width:300px;}
+.toast-success{background:#22c55e;}.toast-error{background:var(--danger);}.toast-info{background:var(--primary);}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px) scale(.92);}to{opacity:1;transform:none;}}
+@keyframes toastOut{from{opacity:1;}to{opacity:0;transform:translateY(8px) scale(.92);}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay{display:block;}
+  .topbar{display:flex;}
+  .main{margin-left:0;padding-top:var(--topbar-h);}
+  .main-inner{padding:1.25rem 1rem 3rem;}
+  .g2,.g3{grid-template-columns:1fr;}
+  .span2,.span3{grid-column:span 1;}
+  .page-header{flex-direction:column;align-items:flex-start;}
+  .form-footer{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <div>
+        <div class="sidebar-logo-title">LENDING MANAGEMENT</div>
+        <div class="sidebar-logo-sub">Loan Management System</div>
+      </div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <span class="nav-label">Overview</span>
+    <a class="nav-item" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard Summary</a>
+    <a class="nav-item sub" href="monthly-profit.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Monthly Profit</a>
+    <a class="nav-item sub" href="past-due.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Past Due</a>
+    <a class="nav-item sub" href="cash-flow.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Cash Flow</a>
+    <span class="nav-label">Clients & Loans</span>
+    <a class="nav-item" href="client-loan-summary.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Client Loan Summary</a>
+    <a class="nav-item" href="loan-schedule.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Loan Schedule</a>
+    <a class="nav-item" href="payment-data.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payment Data</a>
+    <a class="nav-item" href="loan-data.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Loan Data</a>
+    <a class="nav-item active" href="client-list.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Client List</a>
+    <span class="nav-label">Settings</span>
+    <a class="nav-item" href="setup.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Setup</a>
+    <a class="nav-item admin-only" href="user-management.html" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>User Management<span class="badge-admin">ADMIN</span></a>
+    <a class="nav-item admin-only" href="list-management.html" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>List Management<span class="badge-admin">ADMIN</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="theme-row">
+      <span class="theme-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Dark Mode</span>
+      <div class="theme-switch" id="themeSwitch"></div>
+    </div>
+    <div class="date-widget" id="dateWidget">—</div>
+    <div class="user-row">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div style="flex:1;min-width:0;"><div class="user-name" id="userName">Loading…</div><div class="user-email" id="userEmail"></div></div>
+      <span class="role-badge" id="roleBadge">—</span>
+    </div>
+    <button class="btn-logout" id="logoutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>
+  </div>
+</aside>
+
+<!-- Mobile Topbar -->
+<div class="topbar" id="topbar">
+  <button class="btn-menu" id="menuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  <span class="topbar-title">New Borrower</span>
+  <button class="btn-menu" id="menuThemeBtn">
+    <svg id="topIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg id="topIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+<div class="main-inner">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">New Borrower</h1>
+      <p class="page-subtitle">Register a new client in the system</p>
+    </div>
+    <a href="client-list.html" class="btn btn-ghost">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      View All Clients
+    </a>
+  </div>
+
+  <!-- Success Banner -->
+  <div class="success-banner" id="successBanner">
+    <div class="success-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="success-title">Borrower Registered Successfully!</div>
+    <div class="success-body" id="successBody">The new borrower has been saved to the system.</div>
+    <div class="success-cn" id="successCN">CN000001</div>
+    <div class="success-actions">
+      <button class="btn btn-success" id="addAnotherBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Another Borrower
+      </button>
+      <a href="new-loan.html" class="btn btn-primary" id="createLoanLink">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Create Loan for This Client
+      </a>
+      <a href="client-list.html" class="btn btn-ghost">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        View Client List
+      </a>
+    </div>
+  </div>
+
+  <!-- Form Card -->
+  <div class="form-card" id="formCard">
+    <div class="form-card-header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="12" y1="3" x2="12" y2="11"/><line x1="10" y1="7" x2="14" y2="7"/></svg>
+      <div>
+        <div class="form-card-header-title">Borrower Registration Form</div>
+        <div class="form-card-header-sub">Fields marked with * are required</div>
+      </div>
+    </div>
+
+    <!-- Section 1: Preview & CN -->
+    <div class="form-section">
+      <div class="section-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Client Preview
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+        <div class="avatar-preview-row">
+          <div class="avatar-circle" id="avatarCircle">?</div>
+          <div>
+            <div class="avatar-name" id="previewName">New Borrower</div>
+            <div class="avatar-info" id="previewMeta">Fill in the form to see a preview</div>
+          </div>
+        </div>
+        <div class="cn-preview">
+          <div class="cn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div>
+            <div class="cn-label">Auto-assigned Client #</div>
+            <div class="cn-value" id="cnPreview">Loading…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Personal -->
+    <div class="form-section">
+      <div class="section-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Personal Information
+      </div>
+      <div class="form-grid g3">
+        <div class="form-group">
+          <label class="form-label" for="firstName">First Name<span class="req">*</span></label>
+          <input class="form-input" type="text" id="firstName" placeholder="Juan" maxlength="50"/>
+          <div class="form-error" id="err-firstName">First name is required.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="lastName">Last Name<span class="req">*</span></label>
+          <input class="form-input" type="text" id="lastName" placeholder="dela Cruz" maxlength="50"/>
+          <div class="form-error" id="err-lastName">Last name is required.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="jobPosition">Job Position</label>
+          <input class="form-input" type="text" id="jobPosition" placeholder="e.g. Teacher" list="jobList" maxlength="80"/>
+          <datalist id="jobList"></datalist>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="phone">Phone Number<span class="req">*</span></label>
+          <input class="form-input" type="tel" id="phone" placeholder="09XXXXXXXXX" maxlength="20"/>
+          <div class="form-error" id="err-phone">Phone number is required.</div>
+        </div>
+        <div class="form-group span2">
+          <label class="form-label" for="address">Address<span class="req">*</span></label>
+          <textarea class="form-textarea" id="address" placeholder="House No., Street, Barangay, City, Province" maxlength="300"></textarea>
+          <div class="form-error" id="err-address">Address is required.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Work & Company -->
+    <div class="form-section">
+      <div class="section-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        Work & Company
+      </div>
+      <div class="form-grid g2">
+        <div class="form-group">
+          <label class="form-label" for="company">Company
+            <span class="form-hint-inline">type or select</span>
+          </label>
+          <input class="form-input" type="text" id="company" placeholder="Company or employer name" list="companyList" maxlength="80"/>
+          <datalist id="companyList"></datalist>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="branch">Branch
+            <span class="form-hint-inline">type or select</span>
+          </label>
+          <input class="form-input" type="text" id="branch" placeholder="e.g. Main Branch" list="branchList" maxlength="80"/>
+          <datalist id="branchList"></datalist>
+        </div>
+        <div class="form-group span2">
+          <label class="form-label" for="recommendedBy">Recommended By</label>
+          <input class="form-input" type="text" id="recommendedBy" placeholder="Name of referrer or guarantor" maxlength="80"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: Social Media -->
+    <div class="form-section">
+      <div class="section-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        Social Media <span style="font-weight:400;color:var(--text3);font-size:.65rem;text-transform:none;letter-spacing:0;">(optional)</span>
+      </div>
+      <div class="form-grid g2">
+        <div class="form-group">
+          <label class="form-label" for="facebookName">Facebook Name</label>
+          <input class="form-input" type="text" id="facebookName" placeholder="Facebook display name" maxlength="80"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="facebookLink">Facebook Profile Link</label>
+          <input class="form-input" type="url" id="facebookLink" placeholder="https://facebook.com/…" maxlength="200"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="form-footer">
+      <div class="form-footer-hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Client number is auto-generated. New entries for Company, Branch, and Job Position will be added to their respective lists.
+      </div>
+      <div class="form-footer-actions">
+        <button class="btn btn-ghost" id="clearBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Clear Form
+        </button>
+        <button class="btn btn-success" id="submitBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Register Borrower
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signOut, onAuthStateChanged }
+                             from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, getDocs, addDoc, getDoc, doc, serverTimestamp }
+                             from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig={apiKey:"AIzaSyBjYXRXK2lGBdUiWku1rae7MTpYl3bl0hw",authDomain:"lending-management-app-460f5.firebaseapp.com",projectId:"lending-management-app-460f5",storageBucket:"lending-management-app-460f5.firebasestorage.app",messagingSenderId:"167550754445",appId:"1:167550754445:web:e1548d3b0f52b751ed0cc4"};
+const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const toast=(msg,type='info',dur=3200)=>{const el=document.createElement('div');el.className=`toast toast-${type}`;el.textContent=msg;document.getElementById('toastContainer').appendChild(el);setTimeout(()=>{el.style.animation='toastOut .3s ease forwards';setTimeout(()=>el.remove(),300);},dur);};
+
+/* ── Auth ── */
+onAuthStateChanged(auth,async user=>{
+  if(!user){window.location.href='login.html';return;}
+  let sess=sessionStorage.getItem('lma_user');
+  if(!sess){const snap=await getDoc(doc(db,'user_roles',user.uid));const role=snap.exists()?snap.data().role:'pending';if(role==='pending'){window.location.href='login.html';return;}sessionStorage.setItem('lma_user',JSON.stringify({uid:user.uid,email:user.email,displayName:user.displayName,photoURL:user.photoURL,role}));}
+  const info=JSON.parse(sessionStorage.getItem('lma_user'));
+  if(info.role==='pending'){window.location.href='login.html';return;}
+  initUI(info);
+  loadDropdownLists();
+  loadNextCN();
+});
+
+function initUI(info){
+  document.getElementById('userName').textContent=info.displayName||'User';
+  document.getElementById('userEmail').textContent=info.email||'';
+  const rb=document.getElementById('roleBadge');rb.textContent=info.role;rb.className=`role-badge ${info.role}`;
+  const av=document.getElementById('userAvatar');if(info.photoURL)av.innerHTML=`<img src="${info.photoURL}" alt=""/>`;else av.textContent=(info.displayName||'U')[0].toUpperCase();
+  if(info.role==='admin')document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
+}
+const now=new Date();
+document.getElementById('dateWidget').textContent=`${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+document.getElementById('logoutBtn').addEventListener('click',async()=>{await signOut(auth);sessionStorage.removeItem('lma_user');window.location.href='login.html';});
+
+/* ── Theme ── */
+(function(){const root=document.documentElement,sw=document.getElementById('themeSwitch'),sunT=document.getElementById('topIconSun'),moonT=document.getElementById('topIconMoon');
+function apply(t){root.setAttribute('data-theme',t);localStorage.setItem('lma_theme',t);sw.classList.toggle('on',t==='dark');if(sunT){sunT.style.display=t==='dark'?'none':'';moonT.style.display=t==='dark'?'':'none';}}
+apply(localStorage.getItem('lma_theme')||'light');
+sw.addEventListener('click',()=>apply(root.getAttribute('data-theme')==='dark'?'light':'dark'));
+document.getElementById('menuThemeBtn')?.addEventListener('click',()=>apply(root.getAttribute('data-theme')==='dark'?'light':'dark'));})();
+
+/* ── Sidebar ── */
+const sidebar=document.getElementById('sidebar'),overlay=document.getElementById('sidebarOverlay');
+document.getElementById('menuBtn')?.addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('show');});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('show');});
+
+/* ══════════════════════════════════════════
+   LOAD DROPDOWN LISTS
+══════════════════════════════════════════ */
+function loadDropdownLists(){
+  const fill=(dlId,lsKey,fsKeys)=>{
+    const stored=JSON.parse(localStorage.getItem(lsKey)||'[]');
+    const names=[...new Set(stored.map(i=>i.name||i).filter(Boolean))].sort();
+    document.getElementById(dlId).innerHTML=names.map(n=>`<option value="${n}"/>`).join('');
+  };
+  fill('companyList','esl_companies');
+  fill('branchList','esl_branches');
+  fill('jobList','esl_job_positions');
+}
+
+/* ══════════════════════════════════════════
+   NEXT CLIENT NUMBER
+══════════════════════════════════════════ */
+let nextCNNum=1;
+async function loadNextCN(){
+  try{
+    const snap=await getDocs(collection(db,'borrowers'));
+    const nums=snap.docs.map(d=>parseInt((d.data().clientNumber||'CN000000').replace('CN',''))||0);
+    nextCNNum=(Math.max(0,...nums))+1;
+    document.getElementById('cnPreview').textContent=`CN${String(nextCNNum).padStart(6,'0')}`;
+  }catch(e){
+    document.getElementById('cnPreview').textContent='CN000001';
+  }
+}
+
+/* ══════════════════════════════════════════
+   LIVE PREVIEW
+══════════════════════════════════════════ */
+function updatePreview(){
+  const first=(document.getElementById('firstName').value||'').trim();
+  const last=(document.getElementById('lastName').value||'').trim();
+  const phone=(document.getElementById('phone').value||'').trim();
+  const company=(document.getElementById('company').value||'').trim();
+
+  const fullName=`${first} ${last}`.trim()||'New Borrower';
+  const initials=(first&&last)?`${first[0]}${last[0]}`.toUpperCase():first?first[0].toUpperCase():'?';
+
+  document.getElementById('previewName').textContent=fullName;
+  document.getElementById('avatarCircle').textContent=initials;
+  document.getElementById('previewMeta').textContent=[phone,company].filter(Boolean).join(' · ')||'Fill in the form to see a preview';
+}
+
+['firstName','lastName','phone','company'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('input',updatePreview);
+});
+
+/* ══════════════════════════════════════════
+   VALIDATION
+══════════════════════════════════════════ */
+function validate(){
+  const required={
+    firstName:'err-firstName',
+    lastName:'err-lastName',
+    phone:'err-phone',
+    address:'err-address'
+  };
+  let valid=true;
+  Object.entries(required).forEach(([id,errId])=>{
+    const val=(document.getElementById(id)?.value||'').trim();
+    const errEl=document.getElementById(errId);
+    const inputEl=document.getElementById(id);
+    if(!val){
+      errEl.classList.add('show');
+      inputEl.classList.add('error');
+      if(valid)inputEl.focus();
+      valid=false;
+    } else {
+      errEl.classList.remove('show');
+      inputEl.classList.remove('error');
+    }
+  });
+  return valid;
+}
+
+// Clear errors on input
+['firstName','lastName','phone','address'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('input',function(){
+    this.classList.remove('error');
+    document.getElementById(`err-${id}`)?.classList.remove('show');
+  });
+});
+
+/* ══════════════════════════════════════════
+   SUBMIT
+══════════════════════════════════════════ */
+let savedBorrowerId=null;
+
+document.getElementById('submitBtn').addEventListener('click',async()=>{
+  if(!validate()) return;
+
+  const firstName=document.getElementById('firstName').value.trim();
+  const lastName=document.getElementById('lastName').value.trim();
+  const phone=document.getElementById('phone').value.trim();
+  const address=document.getElementById('address').value.trim();
+  const jobPosition=document.getElementById('jobPosition').value.trim();
+  const company=document.getElementById('company').value.trim();
+  const branch=document.getElementById('branch').value.trim();
+  const recommendedBy=document.getElementById('recommendedBy').value.trim();
+  const facebookName=document.getElementById('facebookName').value.trim();
+  const facebookLink=document.getElementById('facebookLink').value.trim();
+
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true;
+  btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .7s linear infinite;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Saving…`;
+
+  try{
+    // Re-fetch max CN to be safe (concurrent saves)
+    const snap=await getDocs(collection(db,'borrowers'));
+    const nums=snap.docs.map(d=>parseInt((d.data().clientNumber||'CN000000').replace('CN',''))||0);
+    const cn=`CN${String((Math.max(0,...nums))+1).padStart(6,'0')}`;
+
+    const ref=await addDoc(collection(db,'borrowers'),{
+      clientNumber:cn,
+      firstName,lastName,phone,address,
+      jobPosition,company,branch,recommendedBy,
+      facebookName,facebookLink,
+      createdAt:serverTimestamp()
+    });
+    savedBorrowerId=ref.id;
+
+    // Save new company/branch/job to lists if not already there
+    await ensureListItem('esl_companies','companies',company);
+    await ensureListItem('esl_branches','branches',branch);
+    await ensureListItem('esl_job_positions','job_positions',jobPosition);
+
+    // Show success
+    document.getElementById('formCard').style.display='none';
+    document.getElementById('successBody').textContent=`${firstName} ${lastName} has been registered with client number ${cn}.`;
+    document.getElementById('successCN').textContent=cn;
+    document.getElementById('successBanner').classList.add('show');
+    toast(`Borrower ${firstName} ${lastName} registered! 🎉`,'success');
+    nextCNNum++;
+
+  }catch(err){
+    toast('Error saving borrower: '+err.message,'error');
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Register Borrower`;
+  }
+});
+
+/* ── Ensure list item in localStorage + Firestore ── */
+async function ensureListItem(lsKey,fsCol,name){
+  if(!name)return;
+  const stored=JSON.parse(localStorage.getItem(lsKey)||'[]');
+  const exists=stored.some(i=>(i.name||i).toLowerCase()===name.toLowerCase());
+  if(!exists){
+    stored.push({name,active:true});
+    localStorage.setItem(lsKey,JSON.stringify(stored));
+    try{await addDoc(collection(db,fsCol),{name,active:true,createdAt:serverTimestamp()});}
+    catch(e){/* non-critical */}
+  }
+}
+
+/* ── Add Another ── */
+document.getElementById('addAnotherBtn').addEventListener('click',()=>{
+  document.getElementById('successBanner').classList.remove('show');
+  document.getElementById('formCard').style.display='';
+  clearForm();
+  loadNextCN();
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+
+/* ── Clear ── */
+document.getElementById('clearBtn').addEventListener('click',()=>{
+  if(confirm('Clear all form fields?')) clearForm();
+});
+
+function clearForm(){
+  ['firstName','lastName','phone','address','jobPosition','company',
+   'branch','recommendedBy','facebookName','facebookLink'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.value='';el.classList.remove('error');}
+  });
+  document.querySelectorAll('.form-error').forEach(el=>el.classList.remove('show'));
+  updatePreview();
+}
+
+/* spin keyframe for button */
+const style=document.createElement('style');
+style.textContent='@keyframes spin{to{transform:rotate(360deg);}}';
+document.head.appendChild(style);
+</script>
+<script>(function(){const t=localStorage.getItem('lma_theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+</body>
+</html>

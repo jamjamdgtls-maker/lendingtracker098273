@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard — Lending Management App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════ */
+:root{
+  --bg:#f7f5ff;--surface:#ffffff;--card:#eef0f5;
+  --primary:#6c3dcc;--primary-h:#5a2fb5;--primary-g:#8b5cf6;
+  --accent:#22c55e;--warn:#eab308;--danger:#ef4444;--muted:#e8eaee;
+  --text:#1a1a2e;--text2:#4b5280;--text3:#8892b0;
+  --border:rgba(108,61,204,.13);--glow:rgba(108,61,204,.15);
+  --sidebar-w:260px;--topbar-h:60px;
+  --r:1rem;--rs:.6rem;
+  --tr:.22s cubic-bezier(.4,0,.2,1);
+  --shadow:0 4px 24px rgba(108,61,204,.10),0 1px 3px rgba(0,0,0,.05);
+  --shadow-lg:0 8px 40px rgba(108,61,204,.14),0 2px 6px rgba(0,0,0,.07);
+  --font-d:'Syne',sans-serif;--font-b:'Instrument Sans',sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#13111f;--surface:#1e1b30;--card:#272b3d;
+  --primary:#7c4dff;--primary-h:#6e3fef;--primary-g:#a78bfa;
+  --muted:#2e3350;--text:#f0edff;--text2:#a8b0d0;--text3:#6070a0;
+  --border:rgba(124,77,255,.18);--glow:rgba(124,77,255,.2);
+  --shadow:0 4px 24px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.25);
+  --shadow-lg:0 8px 40px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.3);
+}
+
+/* ═══════════════════════════════════════════
+   RESET
+═══════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;}
+body{font-family:var(--font-b);background:var(--bg);color:var(--text);
+  min-height:100dvh;display:flex;overflow-x:hidden;
+  transition:background var(--tr),color var(--tr);}
+button{font-family:var(--font-b);cursor:pointer;border:none;background:none;}
+input,select,textarea{font-family:var(--font-b);}
+a{text-decoration:none;color:inherit;}
+
+/* ═══════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════ */
+.sidebar{
+  width:var(--sidebar-w);flex-shrink:0;
+  background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;height:100dvh;
+  position:fixed;left:0;top:0;z-index:200;
+  transition:transform var(--tr),background var(--tr),border-color var(--tr);
+  overflow:hidden;
+}
+.sidebar-header{
+  padding:1.25rem 1.1rem 1rem;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.sidebar-logo{display:flex;align-items:center;gap:.65rem;}
+.sidebar-logo-icon{
+  width:2.1rem;height:2.1rem;border-radius:.55rem;
+  background:linear-gradient(135deg,var(--primary),var(--primary-g));
+  display:grid;place-items:center;flex-shrink:0;
+}
+.sidebar-logo-icon svg{width:1.1rem;height:1.1rem;color:#fff;}
+.sidebar-logo-text{flex:1;min-width:0;}
+.sidebar-logo-title{
+  font-family:var(--font-d);font-weight:800;font-size:.78rem;
+  line-height:1.15;color:var(--text);letter-spacing:.01em;
+}
+.sidebar-logo-sub{font-size:.62rem;color:var(--text3);font-weight:500;letter-spacing:.05em;margin-top:.1rem;}
+
+.sidebar-nav{flex:1;overflow-y:auto;padding:.75rem .6rem;display:flex;flex-direction:column;gap:.15rem;}
+.sidebar-nav::-webkit-scrollbar{width:3px;}
+.sidebar-nav::-webkit-scrollbar-track{background:transparent;}
+.sidebar-nav::-webkit-scrollbar-thumb{background:var(--muted);border-radius:10px;}
+
+.nav-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text3);padding:.5rem .65rem .25rem;margin-top:.35rem;}
+.nav-item{
+  display:flex;align-items:center;gap:.6rem;
+  padding:.55rem .7rem;border-radius:var(--rs);
+  color:var(--text2);font-size:.82rem;font-weight:500;
+  transition:var(--tr);position:relative;
+}
+.nav-item:hover{background:var(--muted);color:var(--text);}
+.nav-item.active{background:var(--primary);color:#fff;}
+.nav-item.active svg{color:#fff;}
+.nav-item svg{width:1rem;height:1rem;flex-shrink:0;color:var(--text3);transition:var(--tr);}
+.nav-item:hover svg{color:var(--text);}
+.nav-item.active svg{color:#fff;}
+.nav-item.sub{padding-left:1.9rem;font-size:.78rem;}
+.nav-item .badge-admin{
+  margin-left:auto;font-size:.55rem;font-weight:700;letter-spacing:.05em;
+  background:var(--primary);color:#fff;padding:.1rem .35rem;border-radius:100px;
+}
+
+.sidebar-footer{
+  padding:.75rem .6rem;border-top:1px solid var(--border);
+  display:flex;flex-direction:column;gap:.5rem;flex-shrink:0;
+}
+.theme-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.35rem .5rem;
+}
+.theme-label{font-size:.75rem;color:var(--text2);font-weight:500;display:flex;align-items:center;gap:.4rem;}
+.theme-label svg{width:.9rem;height:.9rem;}
+.theme-switch{
+  width:2.4rem;height:1.3rem;border-radius:100px;
+  background:var(--muted);border:1.5px solid var(--border);
+  position:relative;transition:var(--tr);cursor:pointer;
+}
+.theme-switch.on{background:var(--primary);border-color:var(--primary);}
+.theme-switch::after{
+  content:'';position:absolute;top:2px;left:2px;
+  width:calc(1.3rem - 8px);height:calc(1.3rem - 8px);
+  background:#fff;border-radius:50%;transition:var(--tr);
+  box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+.theme-switch.on::after{transform:translateX(1.1rem);}
+
+.date-widget{
+  padding:.4rem .5rem;background:var(--card);border-radius:var(--rs);
+  font-size:.72rem;color:var(--text2);text-align:center;font-weight:500;
+}
+.user-row{
+  display:flex;align-items:center;gap:.55rem;
+  padding:.35rem .5rem;
+}
+.user-avatar{
+  width:1.8rem;height:1.8rem;border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--primary-g));
+  display:grid;place-items:center;font-size:.7rem;font-weight:700;color:#fff;
+  flex-shrink:0;overflow:hidden;
+}
+.user-avatar img{width:100%;height:100%;object-fit:cover;}
+.user-info{flex:1;min-width:0;}
+.user-name{font-size:.75rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-email{font-size:.62rem;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.role-badge{
+  font-size:.55rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  padding:.15rem .4rem;border-radius:100px;flex-shrink:0;
+}
+.role-badge.admin{background:rgba(108,61,204,.15);color:var(--primary);}
+.role-badge.user{background:var(--muted);color:var(--text2);}
+
+.btn-logout{
+  display:flex;align-items:center;justify-content:center;gap:.45rem;
+  padding:.45rem;border-radius:var(--rs);
+  color:var(--danger);font-size:.78rem;font-weight:600;
+  transition:var(--tr);
+}
+.btn-logout:hover{background:rgba(239,68,68,.08);}
+.btn-logout svg{width:.85rem;height:.85rem;}
+
+/* overlay for mobile */
+.sidebar-overlay{
+  display:none;position:fixed;inset:0;z-index:199;
+  background:rgba(0,0,0,.45);backdrop-filter:blur(2px);
+  opacity:0;transition:opacity var(--tr);
+}
+.sidebar-overlay.show{opacity:1;}
+
+/* ═══════════════════════════════════════════
+   TOPBAR (mobile)
+═══════════════════════════════════════════ */
+.topbar{
+  display:none;height:var(--topbar-h);
+  background:var(--surface);border-bottom:1px solid var(--border);
+  align-items:center;gap:.75rem;padding:0 1rem;
+  position:fixed;top:0;left:0;right:0;z-index:180;
+}
+.topbar-title{font-family:var(--font-d);font-weight:800;font-size:.85rem;flex:1;letter-spacing:.01em;}
+.btn-menu{
+  width:2.2rem;height:2.2rem;border-radius:var(--rs);
+  background:var(--card);display:grid;place-items:center;
+  transition:var(--tr);
+}
+.btn-menu:hover{background:var(--muted);}
+.btn-menu svg{width:1.1rem;height:1.1rem;}
+
+/* ═══════════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════════ */
+.main{
+  margin-left:var(--sidebar-w);flex:1;min-width:0;
+  display:flex;flex-direction:column;min-height:100dvh;
+}
+.main-inner{padding:1.75rem 1.75rem 3rem;flex:1;}
+
+.page-header{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:1rem;margin-bottom:1.75rem;flex-wrap:wrap;
+}
+.page-title{
+  font-family:var(--font-d);font-weight:800;font-size:1.5rem;
+  color:var(--text);line-height:1.2;
+}
+.page-subtitle{font-size:.8rem;color:var(--text3);margin-top:.25rem;font-weight:500;}
+.action-buttons{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;}
+
+/* ═══════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════ */
+.btn{
+  display:inline-flex;align-items:center;gap:.45rem;
+  padding:.55rem 1.1rem;border-radius:var(--rs);
+  font-size:.82rem;font-weight:600;
+  transition:var(--tr);letter-spacing:.01em;
+  white-space:nowrap;
+}
+.btn svg{width:.9rem;height:.9rem;flex-shrink:0;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-h);box-shadow:0 4px 16px var(--glow);transform:translateY(-1px);}
+.btn-success{background:var(--accent);color:#fff;}
+.btn-success:hover{background:#16a34a;box-shadow:0 4px 16px rgba(34,197,94,.3);transform:translateY(-1px);}
+.btn-ghost{background:var(--card);color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--muted);color:var(--text);}
+.btn-sm{padding:.35rem .8rem;font-size:.75rem;}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-danger:hover{background:#dc2626;transform:translateY(-1px);}
+
+/* ═══════════════════════════════════════════
+   METRIC CARDS
+═══════════════════════════════════════════ */
+.metrics-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+  gap:1rem;
+  margin-bottom:1.75rem;
+}
+.metric-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:1.25rem;
+  box-shadow:var(--shadow);
+  transition:var(--tr);
+  animation:cardIn .5s cubic-bezier(.34,1.26,.64,1) both;
+  position:relative;overflow:hidden;
+}
+.metric-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);}
+.metric-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  border-radius:var(--r) var(--r) 0 0;
+}
+.mc-green::before{background:linear-gradient(90deg,#22c55e,#86efac);}
+.mc-amber::before{background:linear-gradient(90deg,#eab308,#fde047);}
+.mc-red::before{background:linear-gradient(90deg,#ef4444,#fca5a5);}
+.mc-purple::before{background:linear-gradient(90deg,var(--primary),var(--primary-g));}
+
+@keyframes cardIn{
+  from{opacity:0;transform:translateY(18px) scale(.97);}
+  to{opacity:1;transform:translateY(0) scale(1);}
+}
+.metric-card:nth-child(1){animation-delay:.05s;}
+.metric-card:nth-child(2){animation-delay:.1s;}
+.metric-card:nth-child(3){animation-delay:.15s;}
+.metric-card:nth-child(4){animation-delay:.2s;}
+.metric-card:nth-child(5){animation-delay:.25s;}
+.metric-card:nth-child(6){animation-delay:.3s;}
+
+.metric-header{display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;margin-bottom:.75rem;}
+.metric-icon{
+  width:2.25rem;height:2.25rem;border-radius:.6rem;
+  display:grid;place-items:center;flex-shrink:0;
+}
+.metric-icon svg{width:1.1rem;height:1.1rem;}
+.ic-green{background:rgba(34,197,94,.12);color:#22c55e;}
+.ic-amber{background:rgba(234,179,8,.12);color:#eab308;}
+.ic-red{background:rgba(239,68,68,.12);color:#ef4444;}
+.ic-purple{background:rgba(108,61,204,.12);color:var(--primary);}
+
+.metric-label{font-size:.72rem;font-weight:600;color:var(--text3);letter-spacing:.04em;text-transform:uppercase;line-height:1.3;}
+.metric-value{font-family:var(--font-d);font-weight:800;font-size:1.35rem;color:var(--text);line-height:1;margin-bottom:.25rem;}
+.metric-sub{font-size:.7rem;color:var(--text3);font-weight:500;}
+
+/* skeleton */
+.skel{
+  background:linear-gradient(90deg,var(--muted) 25%,var(--card) 50%,var(--muted) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.4s infinite;
+  border-radius:.4rem;
+}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+.skel-val{height:1.5rem;width:70%;margin-bottom:.35rem;}
+.skel-lbl{height:.65rem;width:55%;}
+.skel-ic{width:2.25rem;height:2.25rem;border-radius:.6rem;}
+
+/* ═══════════════════════════════════════════
+   SECTION TITLE
+═══════════════════════════════════════════ */
+.section-title{
+  font-family:var(--font-d);font-weight:700;font-size:1rem;
+  color:var(--text);margin-bottom:1rem;
+  display:flex;align-items:center;gap:.5rem;
+}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ═══════════════════════════════════════════
+   RECENT ACTIVITY TABLE
+═══════════════════════════════════════════ */
+.table-wrap{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;
+  animation:cardIn .5s .35s both;
+}
+.table-head{
+  padding:.9rem 1.25rem;
+  background:linear-gradient(90deg,var(--primary),var(--primary-g));
+  display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+}
+.table-head-title{font-family:var(--font-d);font-weight:700;font-size:.88rem;color:#fff;}
+.table-head-sub{font-size:.72rem;color:rgba(255,255,255,.7);}
+table{width:100%;border-collapse:collapse;}
+th{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--text3);padding:.65rem 1.1rem;text-align:left;border-bottom:1px solid var(--border);}
+td{font-size:.8rem;padding:.7rem 1.1rem;border-bottom:1px solid var(--border);color:var(--text2);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--card);}
+.td-name{font-weight:600;color:var(--text);}
+.td-mono{font-family:monospace;font-size:.78rem;}
+.td-amount{font-weight:600;font-family:var(--font-d);}
+.td-green{color:#22c55e;}
+.td-red{color:#ef4444;}
+.td-amber{color:#eab308;}
+.badge{
+  display:inline-flex;align-items:center;gap:.3rem;
+  padding:.15rem .55rem;border-radius:100px;
+  font-size:.65rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+}
+.badge-active{background:rgba(34,197,94,.12);color:#22c55e;}
+.badge-paid{background:var(--muted);color:var(--text3);}
+.badge-due{background:rgba(239,68,68,.12);color:#ef4444;}
+.empty-state{
+  text-align:center;padding:2.5rem 1rem;
+  color:var(--text3);font-size:.82rem;font-weight:500;
+}
+.empty-state svg{width:2.5rem;height:2.5rem;margin:0 auto .75rem;display:block;opacity:.4;}
+
+/* ═══════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,.5);backdrop-filter:blur(4px);
+  display:grid;place-items:center;padding:1rem;
+  opacity:0;pointer-events:none;transition:opacity var(--tr);
+}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);box-shadow:var(--shadow-lg);
+  width:100%;max-width:560px;max-height:90dvh;
+  display:flex;flex-direction:column;
+  transform:scale(.95) translateY(10px);
+  transition:transform var(--tr);
+  overflow:hidden;
+}
+.modal-overlay.open .modal{transform:scale(1) translateY(0);}
+.modal-header{
+  padding:1.25rem 1.4rem 1rem;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:.75rem;
+  flex-shrink:0;
+}
+.modal-title{font-family:var(--font-d);font-weight:800;font-size:1rem;color:var(--text);}
+.modal-close{
+  width:1.9rem;height:1.9rem;border-radius:50%;
+  background:var(--muted);color:var(--text2);
+  display:grid;place-items:center;transition:var(--tr);
+}
+.modal-close:hover{background:var(--danger);color:#fff;}
+.modal-close svg{width:.85rem;height:.85rem;}
+.modal-body{padding:1.25rem 1.4rem;overflow-y:auto;flex:1;}
+.modal-footer{
+  padding:.9rem 1.4rem;border-top:1px solid var(--border);
+  display:flex;justify-content:flex-end;gap:.65rem;flex-shrink:0;
+}
+
+/* Form elements */
+.form-grid{display:grid;gap:.9rem;}
+.form-grid-2{grid-template-columns:1fr 1fr;}
+.form-grid-3{grid-template-columns:1fr 1fr 1fr;}
+.form-group{display:flex;flex-direction:column;gap:.35rem;}
+.form-group.span-2{grid-column:span 2;}
+.form-group.span-3{grid-column:span 3;}
+.form-label{font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text2);}
+.form-label span{color:var(--danger);}
+.form-input,.form-select,.form-textarea{
+  padding:.6rem .85rem;border-radius:var(--rs);
+  border:1.5px solid var(--border);
+  background:var(--card);color:var(--text);
+  font-size:.85rem;font-family:var(--font-b);
+  transition:var(--tr);width:100%;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{
+  outline:none;border-color:var(--primary);
+  box-shadow:0 0 0 3px var(--glow);
+  background:var(--surface);
+}
+.form-input:disabled,.form-select:disabled{opacity:.6;cursor:not-allowed;}
+.form-textarea{resize:vertical;min-height:72px;}
+.form-hint{font-size:.68rem;color:var(--text3);}
+.form-row-info{
+  background:var(--card);border-radius:var(--rs);padding:.75rem .9rem;
+  display:grid;grid-template-columns:1fr 1fr;gap:.5rem;
+  border:1px solid var(--border);
+}
+.fri-item{display:flex;flex-direction:column;gap:.15rem;}
+.fri-label{font-size:.62rem;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.fri-value{font-size:.82rem;font-weight:600;color:var(--text);}
+.calc-row{
+  background:rgba(108,61,204,.06);border:1px solid var(--border);
+  border-radius:var(--rs);padding:.65rem .9rem;
+  display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+}
+.calc-label{font-size:.75rem;color:var(--text2);font-weight:500;}
+.calc-value{font-family:var(--font-d);font-weight:700;color:var(--primary);font-size:.9rem;}
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+.toast-container{
+  position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;
+  display:flex;flex-direction:column;gap:.5rem;pointer-events:none;
+}
+.toast{
+  padding:.65rem 1.1rem;border-radius:var(--rs);
+  font-size:.8rem;font-weight:600;color:#fff;
+  box-shadow:0 4px 20px rgba(0,0,0,.25);
+  animation:toastIn .3s ease both;pointer-events:auto;
+  max-width:280px;
+}
+.toast-success{background:var(--accent);}
+.toast-error{background:var(--danger);}
+.toast-info{background:var(--primary);}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px) scale(.92);}to{opacity:1;transform:none;}}
+@keyframes toastOut{from{opacity:1;}to{opacity:0;transform:translateY(8px) scale(.92);}}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay{display:block;}
+  .topbar{display:flex;}
+  .main{margin-left:0;padding-top:var(--topbar-h);}
+  .main-inner{padding:1.25rem 1rem 3rem;}
+  .metrics-grid{grid-template-columns:repeat(2,1fr);}
+  .page-header{flex-direction:column;align-items:flex-start;}
+  .form-grid-2,.form-grid-3{grid-template-columns:1fr;}
+  .form-group.span-2,.form-group.span-3{grid-column:span 1;}
+}
+@media(max-width:420px){
+  .metrics-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar Overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ═══════════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+      </div>
+      <div class="sidebar-logo-text">
+        <div class="sidebar-logo-title">LENDING MANAGEMENT</div>
+        <div class="sidebar-logo-sub">Loan Management System</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav" aria-label="Main navigation">
+    <span class="nav-label">Overview</span>
+    <a class="nav-item active" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard Summary
+    </a>
+    <a class="nav-item sub" href="monthly-profit.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      Monthly Profit
+    </a>
+    <a class="nav-item sub" href="past-due.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Past Due
+    </a>
+    <a class="nav-item sub" href="cash-flow.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Cash Flow
+    </a>
+
+    <span class="nav-label">Clients & Loans</span>
+    <a class="nav-item" href="client-loan-summary.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Client Loan Summary
+    </a>
+    <a class="nav-item" href="loan-schedule.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Loan Schedule
+    </a>
+    <a class="nav-item" href="payment-data.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      Payment Data
+    </a>
+    <a class="nav-item" href="loan-data.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Loan Data
+    </a>
+    <a class="nav-item" href="client-list.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Client List
+    </a>
+
+    <span class="nav-label">Settings</span>
+    <a class="nav-item" href="setup.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Setup
+    </a>
+    <a class="nav-item admin-only" href="user-management.html" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      User Management
+      <span class="badge-admin">ADMIN</span>
+    </a>
+    <a class="nav-item admin-only" href="list-management.html" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      List Management
+      <span class="badge-admin">ADMIN</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="theme-row">
+      <span class="theme-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        Dark Mode
+      </span>
+      <div class="theme-switch" id="themeSwitch" role="switch" aria-checked="false" tabindex="0"></div>
+    </div>
+    <div class="date-widget" id="dateWidget">—</div>
+    <div class="user-row">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">Loading…</div>
+        <div class="user-email" id="userEmail"></div>
+      </div>
+      <span class="role-badge" id="roleBadge">—</span>
+    </div>
+    <button class="btn-logout" id="logoutBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign Out
+    </button>
+  </div>
+</aside>
+
+<!-- Mobile Topbar -->
+<div class="topbar" id="topbar">
+  <button class="btn-menu" id="menuBtn" aria-label="Open menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <span class="topbar-title">LENDING MANAGEMENT APP</span>
+  <button class="btn-menu" id="menuThemeBtn" aria-label="Toggle theme">
+    <svg id="topIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg id="topIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN
+═══════════════════════════════════════════ -->
+<main class="main">
+  <div class="main-inner">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Welcome back — here's your lending overview for <span id="currentMonth">—</span></p>
+      </div>
+      <div class="action-buttons">
+        <button class="btn btn-success" id="btnNewBorrower">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="12" y1="3" x2="12" y2="11"/><line x1="10" y1="7" x2="14" y2="7" style="display:none"/></svg>
+          New Borrower
+        </button>
+        <button class="btn btn-primary" id="btnNewLoan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Loan
+        </button>
+        <button class="btn btn-primary" id="btnPayment">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Payment Form
+        </button>
+      </div>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="metrics-grid" id="metricsGrid">
+      <!-- Skeleton cards shown while loading -->
+      <div class="metric-card mc-green">
+        <div class="metric-header"><div class="skel skel-ic"></div></div>
+        <div class="skel skel-val"></div><div class="skel skel-lbl"></div>
+      </div>
+      <div class="metric-card mc-amber">
+        <div class="metric-header"><div class="skel skel-ic"></div></div>
+        <div class="skel skel-val"></div><div class="skel skel-lbl"></div>
+      </div>
+      <div class="metric-card mc-green">
+        <div class="metric-header"><div class="skel skel-ic"></div></div>
+        <div class="skel skel-val"></div><div class="skel skel-lbl"></div>
+      </div>
+      <div class="metric-card mc-red">
+        <div class="metric-header"><div class="skel skel-ic"></div></div>
+        <div class="skel skel-val"></div><div class="skel skel-lbl"></div>
+      </div>
+      <div class="metric-card mc-red">
+        <div class="metric-header"><div class="skel skel-ic"></div></div>
+        <div class="skel skel-val"></div><div class="skel skel-lbl"></div>
+      </div>
+      <div class="metric-card mc-purple">
+        <div class="metric-header"><div class="skel skel-ic"></div></div>
+        <div class="skel skel-val"></div><div class="skel skel-lbl"></div>
+      </div>
+    </div>
+
+    <!-- Recent Payments -->
+    <div class="section-title">Recent Payments</div>
+    <div class="table-wrap" id="recentPaymentsWrap">
+      <div class="table-head">
+        <span class="table-head-title">Latest Transactions</span>
+        <span class="table-head-sub">This month</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr><th>Borrower</th><th>Loan ID</th><th>Amount Paid</th><th>Interest</th><th>Balance After</th><th>Date</th></tr>
+          </thead>
+          <tbody id="recentPaymentsTbody">
+            <tr><td colspan="6"><div class="empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Loading payments…
+            </div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /main-inner -->
+</main>
+
+<!-- ═══════════════════════════════════════════
+     MODAL: NEW BORROWER
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalBorrower" role="dialog" aria-modal="true" aria-labelledby="mbTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="mbTitle">New Borrower</h2>
+      <button class="modal-close" data-close="modalBorrower" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid form-grid-2">
+        <div class="form-group">
+          <label class="form-label" for="bFirstName">First Name <span>*</span></label>
+          <input class="form-input" id="bFirstName" type="text" placeholder="Juan"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="bLastName">Last Name <span>*</span></label>
+          <input class="form-input" id="bLastName" type="text" placeholder="dela Cruz"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="bCompany">Company</label>
+          <input class="form-input" id="bCompany" type="text" placeholder="Company name" list="companyList"/>
+          <datalist id="companyList"></datalist>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="bBranch">Branch</label>
+          <input class="form-input" id="bBranch" type="text" placeholder="Branch" list="branchList"/>
+          <datalist id="branchList"></datalist>
+        </div>
+        <div class="form-group span-2">
+          <label class="form-label" for="bAddress">Address <span>*</span></label>
+          <textarea class="form-textarea" id="bAddress" placeholder="Full address"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="bPhone">Phone <span>*</span></label>
+          <input class="form-input" id="bPhone" type="tel" placeholder="09XXXXXXXXX"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="bRecommended">Recommended By</label>
+          <input class="form-input" id="bRecommended" type="text" placeholder="Referrer name"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="bFbName">Facebook Name</label>
+          <input class="form-input" id="bFbName" type="text" placeholder="FB display name"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="bFbLink">Facebook Link</label>
+          <input class="form-input" id="bFbLink" type="url" placeholder="https://facebook.com/..."/>
+        </div>
+        <div class="form-group span-2">
+          <label class="form-label" for="bJobPosition">Job Position</label>
+          <input class="form-input" id="bJobPosition" type="text" placeholder="e.g. Teacher" list="jobList"/>
+          <datalist id="jobList"></datalist>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close="modalBorrower">Cancel</button>
+      <button class="btn btn-success" id="saveBorrowerBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Save Borrower
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MODAL: NEW LOAN
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalLoan" role="dialog" aria-modal="true" aria-labelledby="mlTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="mlTitle">New Loan</h2>
+      <button class="modal-close" data-close="modalLoan" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid form-grid-2">
+        <div class="form-group span-2">
+          <label class="form-label" for="lClient">Select Client <span>*</span></label>
+          <select class="form-select" id="lClient">
+            <option value="">— Select borrower —</option>
+          </select>
+        </div>
+        <!-- Client Info Row -->
+        <div class="form-group span-2" id="lClientInfoRow" style="display:none;">
+          <div class="form-row-info">
+            <div class="fri-item"><span class="fri-label">Full Name</span><span class="fri-value" id="lClientName">—</span></div>
+            <div class="fri-item"><span class="fri-label">Phone</span><span class="fri-value" id="lClientPhone">—</span></div>
+            <div class="fri-item"><span class="fri-label">Company</span><span class="fri-value" id="lClientCompany">—</span></div>
+            <div class="fri-item"><span class="fri-label">Client ID</span><span class="fri-value" id="lClientId">—</span></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="lAmount">Loan Amount (₱) <span>*</span></label>
+          <input class="form-input" id="lAmount" type="number" min="0" step="0.01" placeholder="50000"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="lPurpose">Purpose <span>*</span></label>
+          <select class="form-select" id="lPurpose">
+            <option value="">— Select —</option>
+            <option>Business</option><option>Education</option><option>Emergency</option>
+            <option>Medical</option><option>Personal</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="lTerms">Loan Terms <span>*</span></label>
+          <select class="form-select" id="lTerms">
+            <option value="">— Select —</option>
+            <option>Monthly</option><option>Semi Monthly</option><option>Weekly</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="lFirstPayment">First Payment Date <span>*</span></label>
+          <input class="form-input" id="lFirstPayment" type="date"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="lMonths">No. of Months <span>*</span></label>
+          <input class="form-input" id="lMonths" type="number" min="0.5" step="0.5" placeholder="12"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="lPayments">No. of Payments</label>
+          <input class="form-input" id="lPayments" type="number" readonly placeholder="Auto-calculated"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="lRate">Interest Rate (%) <span>*</span></label>
+          <input class="form-input" id="lRate" type="number" min="0" step="0.01" placeholder="5"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="lDisbursement">Disbursement Date</label>
+          <input class="form-input" id="lDisbursement" type="date" readonly/>
+        </div>
+        <!-- Calculated payment -->
+        <div class="form-group span-2" id="lCalcRow" style="display:none;">
+          <div class="calc-row">
+            <span class="calc-label">Fixed Payment per Period (Diminishing Balance)</span>
+            <span class="calc-value" id="lCalcValue">₱0.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close="modalLoan">Cancel</button>
+      <button class="btn btn-primary" id="saveLoanBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Create Loan
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MODAL: PAYMENT FORM
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalPayment" role="dialog" aria-modal="true" aria-labelledby="mpTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="mpTitle">Payment Form</h2>
+      <button class="modal-close" data-close="modalPayment" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid form-grid-2">
+        <div class="form-group span-2">
+          <label class="form-label" for="pClient">Select Client <span>*</span></label>
+          <select class="form-select" id="pClient">
+            <option value="">— Select borrower —</option>
+          </select>
+        </div>
+        <div class="form-group span-2">
+          <label class="form-label" for="pLoan">Select Loan <span>*</span></label>
+          <select class="form-select" id="pLoan" disabled>
+            <option value="">— Select client first —</option>
+          </select>
+        </div>
+        <!-- Loan Info -->
+        <div class="form-group span-2" id="pLoanInfoRow" style="display:none;">
+          <div class="form-row-info">
+            <div class="fri-item"><span class="fri-label">Loan Amount</span><span class="fri-value" id="pLoanAmount">—</span></div>
+            <div class="fri-item"><span class="fri-label">Terms</span><span class="fri-value" id="pLoanTerms">—</span></div>
+            <div class="fri-item"><span class="fri-label">Interest Rate</span><span class="fri-value" id="pLoanRate">—</span></div>
+            <div class="fri-item"><span class="fri-label">Current Balance</span><span class="fri-value" id="pLoanBalance">—</span></div>
+            <div class="fri-item"><span class="fri-label">Payments Made</span><span class="fri-value" id="pLoanPayCount">—</span></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pAmount">Payment (₱) <span>*</span></label>
+          <input class="form-input" id="pAmount" type="number" min="0" step="0.01" placeholder="0.00"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pDate">Payment Date <span>*</span></label>
+          <input class="form-input" id="pDate" type="date"/>
+        </div>
+        <div class="form-group span-2">
+          <label class="form-label" for="pInterest">
+            Interest Value (₱)
+            <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);margin-left:.35rem;">Calculated from: Balance × Rate</span>
+          </label>
+          <div style="display:flex;gap:.5rem;">
+            <input class="form-input" id="pInterest" type="number" min="0" step="0.01" placeholder="0.00" style="flex:1;"/>
+            <button class="btn btn-ghost btn-sm" id="calcInterestBtn" type="button">Calculate</button>
+          </div>
+          <span class="form-hint" id="pInterestHint"></span>
+        </div>
+        <!-- Preview -->
+        <div class="form-group span-2" id="pPreviewRow" style="display:none;">
+          <div class="calc-row">
+            <span class="calc-label">Balance After Payment</span>
+            <span class="calc-value" id="pBalanceAfter">₱0.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close="modalPayment">Cancel</button>
+      <button class="btn btn-primary" id="savePaymentBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Record Payment
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══════════════════════════════════════════
+     FIREBASE + APP LOGIC
+═══════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp }        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signOut, onAuthStateChanged }
+                                from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, getDocs, getDoc, addDoc, doc, updateDoc, query,
+         where, orderBy, limit, serverTimestamp, Timestamp }
+                                from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+/* ── Config ── */
+const firebaseConfig = {
+  apiKey:"AIzaSyBjYXRXK2lGBdUiWku1rae7MTpYl3bl0hw",
+  authDomain:"lending-management-app-460f5.firebaseapp.com",
+  projectId:"lending-management-app-460f5",
+  storageBucket:"lending-management-app-460f5.firebasestorage.app",
+  messagingSenderId:"167550754445",
+  appId:"1:167550754445:web:e1548d3b0f52b751ed0cc4"
+};
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+/* ── Auth Guard ── */
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location.href = 'login.html'; return; }
+  let sess = sessionStorage.getItem('lma_user');
+  if (!sess) {
+    const snap = await getDoc(doc(db,'user_roles',user.uid));
+    const role = snap.exists() ? snap.data().role : 'pending';
+    if (role === 'pending') { window.location.href = 'login.html'; return; }
+    sessionStorage.setItem('lma_user', JSON.stringify({
+      uid:user.uid,email:user.email,displayName:user.displayName,
+      photoURL:user.photoURL,role
+    }));
+  }
+  const info = JSON.parse(sessionStorage.getItem('lma_user'));
+  if (info.role === 'pending') { window.location.href = 'login.html'; return; }
+  initUI(info);
+  loadDashboard();
+});
+
+/* ── Helpers ── */
+const fmt = n => new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP',minimumFractionDigits:2}).format(n||0);
+const fmtDate = d => {
+  if (!d) return '—';
+  const dt = d.toDate ? d.toDate() : new Date(d);
+  return dt.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});
+};
+const toast = (msg, type='info', dur=3200) => {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(()=>{ el.style.animation='toastOut .3s ease forwards'; setTimeout(()=>el.remove(),300); },dur);
+};
+
+/* ── Sidebar UI ── */
+function initUI(info) {
+  // User info
+  document.getElementById('userName').textContent   = info.displayName || 'User';
+  document.getElementById('userEmail').textContent  = info.email || '';
+  const rb = document.getElementById('roleBadge');
+  rb.textContent = info.role; rb.className = `role-badge ${info.role}`;
+  // Avatar
+  const av = document.getElementById('userAvatar');
+  if (info.photoURL) { av.innerHTML = `<img src="${info.photoURL}" alt="avatar"/>`; }
+  else { av.textContent = (info.displayName||'U')[0].toUpperCase(); }
+  // Admin items
+  if (info.role === 'admin') {
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+  }
+}
+
+/* ── Date widget & subtitle ── */
+const now = new Date();
+const months = ['January','February','March','April','May','June',
+                'July','August','September','October','November','December'];
+document.getElementById('dateWidget').textContent =
+  `${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+document.getElementById('currentMonth').textContent = `${months[now.getMonth()]} ${now.getFullYear()}`;
+
+/* ── Logout ── */
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await signOut(auth);
+  sessionStorage.removeItem('lma_user');
+  window.location.href = 'login.html';
+});
+
+/* ── Theme ── */
+(function(){
+  const root = document.documentElement;
+  const sw   = document.getElementById('themeSwitch');
+  const sunTop = document.getElementById('topIconSun');
+  const moonTop = document.getElementById('topIconMoon');
+  function apply(t){
+    root.setAttribute('data-theme',t);
+    localStorage.setItem('lma_theme',t);
+    sw.classList.toggle('on', t==='dark');
+    if(sunTop){ sunTop.style.display = t==='dark'?'none':''; moonTop.style.display = t==='dark'?'':'none'; }
+  }
+  apply(localStorage.getItem('lma_theme')||'light');
+  sw.addEventListener('click', ()=> apply(root.getAttribute('data-theme')==='dark'?'light':'dark'));
+  document.getElementById('menuThemeBtn')?.addEventListener('click', ()=>
+    apply(root.getAttribute('data-theme')==='dark'?'light':'dark'));
+})();
+
+/* ── Sidebar mobile ── */
+const sidebar  = document.getElementById('sidebar');
+const overlay  = document.getElementById('sidebarOverlay');
+const menuBtn  = document.getElementById('menuBtn');
+const openSidebar  = () => { sidebar.classList.add('open'); overlay.classList.add('show'); };
+const closeSidebar = () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); };
+menuBtn?.addEventListener('click', openSidebar);
+overlay.addEventListener('click', closeSidebar);
+sidebar.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', closeSidebar));
+
+/* ══════════════════════════════════════════
+   DASHBOARD DATA
+══════════════════════════════════════════ */
+async function loadDashboard() {
+  const curY = now.getFullYear(), curM = now.getMonth();
+  const inMonth = ts => {
+    const d = ts?.toDate ? ts.toDate() : (ts ? new Date(ts) : null);
+    return d && d.getFullYear()===curY && d.getMonth()===curM;
+  };
+
+  try {
+    const [paymentsSnap, loansSnap, borrowersSnap] = await Promise.all([
+      getDocs(collection(db,'payments')),
+      getDocs(collection(db,'loans')),
+      getDocs(collection(db,'borrowers'))
+    ]);
+
+    const payments   = paymentsSnap.docs.map(d=>({id:d.id,...d.data()}));
+    const loans      = loansSnap.docs.map(d=>({id:d.id,...d.data()}));
+    const borrowers  = borrowersSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+    const activeLoans = loans.filter(l=>l.status==='active');
+    const monthPay   = payments.filter(p=> inMonth(p.paymentDate || p.createdAt));
+    const monthLoans = loans.filter(l=> inMonth(l.disbursementDate || l.startDate));
+
+    // 1. Monthly Profit
+    const monthlyProfit = monthPay.reduce((s,p)=>s+(p.interestValue||0),0);
+    // 2. Monthly Disbursement
+    const monthlyDisb   = monthLoans.reduce((s,l)=>s+(l.principal||0),0);
+    // 3. Total Monthly Payment
+    const totalMonthPay = monthPay.reduce((s,p)=>s+(p.amountPaid||0),0);
+    // 4. Remaining Principal
+    const remPrincipal  = activeLoans.reduce((s,l)=>s+(l.currentBalance||0),0);
+    // 5. Total Outstanding (diminishing: currentBalance + currentBalance * rate/100)
+    const totalOutstanding = activeLoans.reduce((s,l)=>{
+      const bal  = l.currentBalance||0;
+      const rate = (l.interestRate||0)/100;
+      return s + bal + (bal*rate);
+    },0);
+    // 6. Active clients
+    const activeClients = borrowers.length;
+
+    renderMetrics({monthlyProfit,monthlyDisb,totalMonthPay,remPrincipal,totalOutstanding,activeClients});
+
+    // Recent payments (top 8, sorted by date desc)
+    const sorted = [...payments].sort((a,b)=>{
+      const da = (a.paymentDate?.toDate?.()||new Date(a.paymentDate||0));
+      const db_ = (b.paymentDate?.toDate?.()||new Date(b.paymentDate||0));
+      return db_-da;
+    }).slice(0,8);
+
+    // Build borrower & loan maps for display
+    const borrowerMap = Object.fromEntries(borrowers.map(b=>[b.id,b]));
+    const loanMap     = Object.fromEntries(loans.map(l=>[l.id,l]));
+
+    renderRecentPayments(sorted, borrowerMap, loanMap);
+
+  } catch(err) {
+    console.error(err);
+    toast('Failed to load dashboard data: '+err.message, 'error');
+  }
+}
+
+function renderMetrics(d) {
+  const grid = document.getElementById('metricsGrid');
+  grid.innerHTML = `
+    ${metricCard('mc-green','ic-green',svgTrending(),'Current Monthly Profit',fmt(d.monthlyProfit),'Interest earned this month')}
+    ${metricCard('mc-amber','ic-amber',svgBanknote(),'Monthly Disbursement',fmt(d.monthlyDisb),'Loans released this month')}
+    ${metricCard('mc-green','ic-green',svgCard(),'Total Monthly Payment',fmt(d.totalMonthPay),'Collected this month')}
+    ${metricCard('mc-red','ic-red',svgWallet(),'Remaining Principal',fmt(d.remPrincipal),'Active loan balances')}
+    ${metricCard('mc-red','ic-red',svgDollar(),'Total Outstanding',fmt(d.totalOutstanding),'Balance + next interest')}
+    ${metricCard('mc-purple','ic-purple',svgUsers(),'Active Clients',d.activeClients,'Total borrowers on record')}
+  `;
+}
+
+function metricCard(mc,ic,icon,label,value,sub){
+  return `<div class="metric-card ${mc}" style="animation-delay:.05s">
+    <div class="metric-header">
+      <div class="metric-icon ${ic}">${icon}</div>
+      <span class="metric-label">${label}</span>
+    </div>
+    <div class="metric-value">${value}</div>
+    <div class="metric-sub">${sub}</div>
+  </div>`;
+}
+
+function renderRecentPayments(payments, borrowerMap, loanMap){
+  const tb = document.getElementById('recentPaymentsTbody');
+  if(!payments.length){
+    tb.innerHTML = `<tr><td colspan="6"><div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      No payments recorded yet
+    </div></td></tr>`;
+    return;
+  }
+  tb.innerHTML = payments.map(p=>{
+    const b = borrowerMap[p.borrowerId];
+    const l = loanMap[p.loanId];
+    const name = b ? `${b.firstName} ${b.lastName}` : '—';
+    const lnum = l ? (l.loanNumber||l.id) : (p.loanId||'—');
+    return `<tr>
+      <td class="td-name">${name}</td>
+      <td class="td-mono">${lnum}</td>
+      <td class="td-amount td-green">${fmt(p.amountPaid)}</td>
+      <td class="td-amount td-amber">${fmt(p.interestValue)}</td>
+      <td class="td-amount td-red">${fmt(p.balanceAfter)}</td>
+      <td>${fmtDate(p.paymentDate||p.createdAt)}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* SVG icons */
+const svgTrending = () => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`;
+const svgBanknote = () => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>`;
+const svgCard     = () => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`;
+const svgWallet   = () => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><circle cx="16" cy="12" r="2"/></svg>`;
+const svgDollar   = () => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`;
+const svgUsers    = () => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+
+/* ══════════════════════════════════════════
+   MODALS
+══════════════════════════════════════════ */
+const openModal  = id => document.getElementById(id).classList.add('open');
+const closeModal = id => document.getElementById(id).classList.remove('open');
+
+document.getElementById('btnNewBorrower').addEventListener('click',()=>{ loadDropdownLists(); openModal('modalBorrower'); });
+document.getElementById('btnNewLoan').addEventListener('click',()=>{ loadBorrowersIntoLoanSelect(); openModal('modalLoan'); });
+document.getElementById('btnPayment').addEventListener('click',()=>{ loadBorrowersIntoPaymentSelect(); openModal('modalPayment'); });
+
+document.querySelectorAll('[data-close]').forEach(btn=>{
+  btn.addEventListener('click',()=>closeModal(btn.dataset.close));
+});
+document.querySelectorAll('.modal-overlay').forEach(ov=>{
+  ov.addEventListener('click',e=>{ if(e.target===ov) ov.classList.remove('open'); });
+});
+
+/* ── New Borrower ── */
+async function loadDropdownLists() {
+  const stored = {
+    company: JSON.parse(localStorage.getItem('esl_companies')||'[]'),
+    branch:  JSON.parse(localStorage.getItem('esl_branches')||'[]'),
+    job:     JSON.parse(localStorage.getItem('esl_job_positions')||'[]'),
+  };
+  const fill = (id, items) => {
+    const dl = document.getElementById(id);
+    dl.innerHTML = items.filter(i=>i.active!==false).map(i=>`<option value="${i.name||i}"/>`).join('');
+  };
+  fill('companyList', stored.company);
+  fill('branchList',  stored.branch);
+  fill('jobList',     stored.job);
+}
+
+document.getElementById('saveBorrowerBtn').addEventListener('click', async () => {
+  const firstName = document.getElementById('bFirstName').value.trim();
+  const lastName  = document.getElementById('bLastName').value.trim();
+  const phone     = document.getElementById('bPhone').value.trim();
+  const address   = document.getElementById('bAddress').value.trim();
+  if (!firstName||!lastName||!phone||!address) { toast('Please fill in all required fields.','error'); return; }
+
+  const btn = document.getElementById('saveBorrowerBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try {
+    const allSnap = await getDocs(collection(db,'borrowers'));
+    const nums = allSnap.docs.map(d=>parseInt((d.data().clientNumber||'CN000000').replace('CN',''))||0);
+    const nextNum = (Math.max(0,...nums)+1).toString().padStart(6,'0');
+
+    await addDoc(collection(db,'borrowers'),{
+      clientNumber: `CN${nextNum}`,
+      firstName, lastName,
+      company:      document.getElementById('bCompany').value.trim(),
+      branch:       document.getElementById('bBranch').value.trim(),
+      address,phone,
+      recommendedBy: document.getElementById('bRecommended').value.trim(),
+      facebookName:  document.getElementById('bFbName').value.trim(),
+      facebookLink:  document.getElementById('bFbLink').value.trim(),
+      jobPosition:   document.getElementById('bJobPosition').value.trim(),
+      createdAt: serverTimestamp()
+    });
+
+    toast(`Borrower ${firstName} ${lastName} saved! 🎉`,'success');
+    closeModal('modalBorrower');
+    document.querySelectorAll('#modalBorrower .form-input, #modalBorrower .form-textarea')
+      .forEach(el=>el.value='');
+    loadDashboard();
+  } catch(err) {
+    toast('Error saving borrower: '+err.message,'error');
+  } finally {
+    btn.disabled=false;
+    btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Save Borrower';
+  }
+});
+
+/* ── New Loan ── */
+let borrowersCache = [];
+async function loadBorrowersIntoLoanSelect(){
+  const snap = await getDocs(collection(db,'borrowers'));
+  borrowersCache = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const sel = document.getElementById('lClient');
+  sel.innerHTML = '<option value="">— Select borrower —</option>' +
+    borrowersCache.sort((a,b)=>(`${a.firstName} ${a.lastName}`).localeCompare(`${b.firstName} ${b.lastName}`))
+    .map(b=>`<option value="${b.id}">${b.firstName} ${b.lastName} (${b.clientNumber})</option>`).join('');
+}
+
+document.getElementById('lClient').addEventListener('change', function(){
+  const b = borrowersCache.find(x=>x.id===this.value);
+  const row = document.getElementById('lClientInfoRow');
+  if(b){ row.style.display='';
+    document.getElementById('lClientName').textContent    = `${b.firstName} ${b.lastName}`;
+    document.getElementById('lClientPhone').textContent   = b.phone||'—';
+    document.getElementById('lClientCompany').textContent = b.company||'—';
+    document.getElementById('lClientId').textContent      = b.clientNumber||'—';
+  } else { row.style.display='none'; }
+});
+
+function calcFixedPayment(P,r,n){
+  if(r===0) return P/n;
+  return (P*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+}
+
+['lAmount','lRate','lMonths','lTerms','lFirstPayment'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', updateLoanCalc);
+  document.getElementById(id).addEventListener('change', updateLoanCalc);
+});
+
+function updateLoanCalc(){
+  const terms    = document.getElementById('lTerms').value;
+  const months   = parseFloat(document.getElementById('lMonths').value)||0;
+  const rate     = parseFloat(document.getElementById('lRate').value)||0;
+  const amount   = parseFloat(document.getElementById('lAmount').value)||0;
+  const firstPay = document.getElementById('lFirstPayment').value;
+
+  let periods = 0;
+  if(terms==='Monthly')      periods = months;
+  else if(terms==='Semi Monthly') periods = months*2;
+  else if(terms==='Weekly')  periods = months*4;
+  document.getElementById('lPayments').value = periods ? Math.round(periods) : '';
+
+  // Disbursement date
+  if(firstPay && terms){
+    const fp = new Date(firstPay+'T00:00:00');
+    if(terms==='Monthly')        fp.setMonth(fp.getMonth()-1);
+    else if(terms==='Semi Monthly') fp.setDate(fp.getDate()-15);
+    else if(terms==='Weekly')    fp.setDate(fp.getDate()-7);
+    document.getElementById('lDisbursement').value = fp.toISOString().split('T')[0];
+  }
+
+  // Fixed payment preview
+  const calcRow = document.getElementById('lCalcRow');
+  if(amount>0 && rate>0 && periods>0){
+    const r = rate/100;
+    const fp = calcFixedPayment(amount, r, Math.round(periods));
+    document.getElementById('lCalcValue').textContent = fmt(fp);
+    calcRow.style.display='';
+  } else { calcRow.style.display='none'; }
+}
+
+document.getElementById('saveLoanBtn').addEventListener('click', async ()=>{
+  const clientId  = document.getElementById('lClient').value;
+  const amount    = parseFloat(document.getElementById('lAmount').value)||0;
+  const purpose   = document.getElementById('lPurpose').value;
+  const terms     = document.getElementById('lTerms').value;
+  const firstPay  = document.getElementById('lFirstPayment').value;
+  const months    = parseFloat(document.getElementById('lMonths').value)||0;
+  const rate      = parseFloat(document.getElementById('lRate').value)||0;
+  const disbStr   = document.getElementById('lDisbursement').value;
+  const numPay    = parseInt(document.getElementById('lPayments').value)||0;
+
+  if(!clientId||!amount||!purpose||!terms||!firstPay||!months||!rate){
+    toast('Please fill in all required fields.','error'); return;
+  }
+
+  const btn = document.getElementById('saveLoanBtn');
+  btn.disabled=true; btn.textContent='Saving…';
+
+  try {
+    const allSnap = await getDocs(collection(db,'loans'));
+    const nums = allSnap.docs.map(d=>parseInt((d.data().loanNumber||'LN000000').replace('LN',''))||0);
+    const nextNum = (Math.max(0,...nums)+1).toString().padStart(6,'0');
+
+    await addDoc(collection(db,'loans'),{
+      loanNumber: `LN${nextNum}`,
+      borrowerId: clientId,
+      principal: amount,
+      interestRate: rate,
+      terms, numMonths: months, numPayments: numPay,
+      currentBalance: amount,
+      purpose,
+      firstPaymentDate: firstPay,
+      disbursementDate: disbStr,
+      startDate: serverTimestamp(),
+      status:'active',
+      createdAt: serverTimestamp()
+    });
+
+    toast('Loan created successfully! 🎉','success');
+    closeModal('modalLoan');
+    document.querySelectorAll('#modalLoan .form-input, #modalLoan .form-select')
+      .forEach(el=>el.value='');
+    document.getElementById('lClientInfoRow').style.display='none';
+    document.getElementById('lCalcRow').style.display='none';
+    loadDashboard();
+  } catch(err){
+    toast('Error creating loan: '+err.message,'error');
+  } finally {
+    btn.disabled=false;
+    btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Create Loan';
+  }
+});
+
+/* ── Payment Form ── */
+let pBorrowersCache=[], pLoansCache=[], selectedLoan=null;
+async function loadBorrowersIntoPaymentSelect(){
+  const snap = await getDocs(collection(db,'borrowers'));
+  pBorrowersCache = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const sel = document.getElementById('pClient');
+  sel.innerHTML = '<option value="">— Select borrower —</option>' +
+    pBorrowersCache.sort((a,b)=>(`${a.firstName} ${a.lastName}`).localeCompare(`${b.firstName} ${b.lastName}`))
+    .map(b=>`<option value="${b.id}">${b.firstName} ${b.lastName} (${b.clientNumber})</option>`).join('');
+  document.getElementById('pDate').value = new Date().toISOString().split('T')[0];
+}
+
+document.getElementById('pClient').addEventListener('change', async function(){
+  const loanSel = document.getElementById('pLoan');
+  if(!this.value){ loanSel.disabled=true; loanSel.innerHTML='<option>— Select client first —</option>'; return; }
+  const q = query(collection(db,'loans'), where('borrowerId','==',this.value), where('status','==','active'));
+  const snap = await getDocs(q);
+  pLoansCache = snap.docs.map(d=>({id:d.id,...d.data()}));
+  loanSel.disabled=false;
+  loanSel.innerHTML = '<option value="">— Select loan —</option>' +
+    pLoansCache.map(l=>`<option value="${l.id}">${l.loanNumber} — Balance: ${fmt(l.currentBalance)}</option>`).join('');
+  document.getElementById('pLoanInfoRow').style.display='none';
+});
+
+document.getElementById('pLoan').addEventListener('change', async function(){
+  selectedLoan = pLoansCache.find(l=>l.id===this.value)||null;
+  const row = document.getElementById('pLoanInfoRow');
+  if(!selectedLoan){ row.style.display='none'; return; }
+  row.style.display='';
+  document.getElementById('pLoanAmount').textContent   = fmt(selectedLoan.principal);
+  document.getElementById('pLoanTerms').textContent    = selectedLoan.terms;
+  document.getElementById('pLoanRate').textContent     = `${selectedLoan.interestRate}%`;
+  document.getElementById('pLoanBalance').textContent  = fmt(selectedLoan.currentBalance);
+  // Count payments
+  const pq = query(collection(db,'payments'),where('loanId','==',selectedLoan.id));
+  const ps = await getDocs(pq);
+  document.getElementById('pLoanPayCount').textContent = ps.size;
+  // Auto-calculate interest (diminishing)
+  calcAndShowInterest();
+  document.getElementById('pPreviewRow').style.display='none';
+});
+
+function calcAndShowInterest(){
+  if(!selectedLoan) return;
+  const interest = selectedLoan.currentBalance * (selectedLoan.interestRate/100);
+  document.getElementById('pInterest').value = interest.toFixed(2);
+  document.getElementById('pInterestHint').textContent =
+    `${fmt(selectedLoan.currentBalance)} × ${selectedLoan.interestRate}% = ${fmt(interest)}`;
+  updatePaymentPreview();
+}
+
+document.getElementById('calcInterestBtn').addEventListener('click', calcAndShowInterest);
+document.getElementById('pAmount').addEventListener('input', updatePaymentPreview);
+document.getElementById('pInterest').addEventListener('input', updatePaymentPreview);
+
+function updatePaymentPreview(){
+  if(!selectedLoan) return;
+  const paid     = parseFloat(document.getElementById('pAmount').value)||0;
+  const interest = parseFloat(document.getElementById('pInterest').value)||0;
+  const principal = paid - interest;
+  const after     = Math.max(0, selectedLoan.currentBalance - principal);
+  document.getElementById('pBalanceAfter').textContent = fmt(after);
+  document.getElementById('pPreviewRow').style.display = paid>0?'':'none';
+}
+
+document.getElementById('savePaymentBtn').addEventListener('click', async ()=>{
+  if(!selectedLoan){ toast('Please select a loan.','error'); return; }
+  const amountPaid  = parseFloat(document.getElementById('pAmount').value)||0;
+  const interestVal = parseFloat(document.getElementById('pInterest').value)||0;
+  const payDate     = document.getElementById('pDate').value;
+  const info        = JSON.parse(sessionStorage.getItem('lma_user')||'{}');
+
+  if(!amountPaid||!payDate){ toast('Please fill in payment amount and date.','error'); return; }
+
+  const btn = document.getElementById('savePaymentBtn');
+  btn.disabled=true; btn.textContent='Saving…';
+
+  try {
+    const principalPaid = amountPaid - interestVal;
+    const balanceBefore = selectedLoan.currentBalance;
+    const balanceAfter  = Math.max(0, balanceBefore - principalPaid);
+
+    await addDoc(collection(db,'payments'),{
+      loanId: selectedLoan.id,
+      borrowerId: selectedLoan.borrowerId,
+      amountPaid, interestValue: interestVal,
+      balanceBefore, balanceAfter,
+      paymentDate: payDate,
+      createdAt: serverTimestamp()
+    });
+
+    // Update loan balance
+    const newStatus = balanceAfter <= 0 ? 'paid' : 'active';
+    await updateDoc(doc(db,'loans',selectedLoan.id),{
+      currentBalance: balanceAfter,
+      status: newStatus
+    });
+
+    toast(`Payment of ${fmt(amountPaid)} recorded! 🎉`,'success');
+    closeModal('modalPayment');
+    document.getElementById('pClient').value=''; document.getElementById('pLoan').innerHTML='<option>— Select client first —</option>';
+    document.getElementById('pLoan').disabled=true;
+    document.getElementById('pAmount').value=''; document.getElementById('pInterest').value='';
+    document.getElementById('pLoanInfoRow').style.display='none'; document.getElementById('pPreviewRow').style.display='none';
+    selectedLoan=null;
+    loadDashboard();
+  } catch(err){
+    toast('Error recording payment: '+err.message,'error');
+  } finally {
+    btn.disabled=false;
+    btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Record Payment';
+  }
+});
+</script>
+</body>
+</html>

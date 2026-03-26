@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>New Loan — Lending Management App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#f4f6fb;--surface:#fff;--card:#eef0f5;--primary:#6c3dcc;--primary-h:#5a2fb5;--primary-g:#8b5cf6;--accent:#22c55e;--warn:#eab308;--danger:#ef4444;--muted:#e8eaee;--text:#1a1a2e;--text2:#4b5280;--text3:#8892b0;--border:rgba(108,61,204,.13);--glow:rgba(108,61,204,.15);--sidebar-w:260px;--topbar-h:60px;--r:1rem;--rs:.6rem;--tr:.22s cubic-bezier(.4,0,.2,1);--shadow:0 2px 16px rgba(108,61,204,.08),0 1px 3px rgba(0,0,0,.04);--shadow-md:0 4px 28px rgba(108,61,204,.12),0 2px 6px rgba(0,0,0,.06);--font-d:'Syne',sans-serif;--font-b:'Instrument Sans',sans-serif;}
+[data-theme="dark"]{--bg:#13111f;--surface:#1e1b30;--card:#272b3d;--primary:#7c4dff;--primary-h:#6e3fef;--primary-g:#a78bfa;--muted:#2e3350;--text:#f0edff;--text2:#a8b0d0;--text3:#6070a0;--border:rgba(124,77,255,.18);--glow:rgba(124,77,255,.2);--shadow:0 2px 16px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.2);--shadow-md:0 4px 28px rgba(0,0,0,.42),0 2px 6px rgba(0,0,0,.25);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}html{font-size:15px;}
+body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height:100dvh;display:flex;overflow-x:hidden;transition:background var(--tr),color var(--tr);}
+button{font-family:var(--font-b);cursor:pointer;border:none;background:none;}a{text-decoration:none;color:inherit;}input,select{font-family:var(--font-b);}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100dvh;position:fixed;left:0;top:0;z-index:200;transition:transform var(--tr),background var(--tr);overflow:hidden;}
+.sidebar-header{padding:1.25rem 1.1rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sidebar-logo{display:flex;align-items:center;gap:.65rem;}
+.sidebar-logo-icon{width:2.1rem;height:2.1rem;border-radius:.55rem;background:linear-gradient(135deg,var(--primary),var(--primary-g));display:grid;place-items:center;flex-shrink:0;}
+.sidebar-logo-icon svg{width:1.1rem;height:1.1rem;color:#fff;}
+.sidebar-logo-title{font-family:var(--font-d);font-weight:800;font-size:.78rem;line-height:1.15;color:var(--text);}
+.sidebar-logo-sub{font-size:.62rem;color:var(--text3);font-weight:500;letter-spacing:.05em;margin-top:.1rem;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:.75rem .6rem;display:flex;flex-direction:column;gap:.15rem;}
+.sidebar-nav::-webkit-scrollbar{width:3px;}.sidebar-nav::-webkit-scrollbar-thumb{background:var(--muted);border-radius:10px;}
+.nav-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:.5rem .65rem .25rem;margin-top:.35rem;}
+.nav-item{display:flex;align-items:center;gap:.6rem;padding:.55rem .7rem;border-radius:var(--rs);color:var(--text2);font-size:.82rem;font-weight:500;transition:var(--tr);}
+.nav-item:hover{background:var(--muted);color:var(--text);}.nav-item.active{background:var(--primary);color:#fff;}
+.nav-item svg{width:1rem;height:1rem;flex-shrink:0;color:var(--text3);transition:var(--tr);}
+.nav-item:hover svg,.nav-item.active svg{color:currentColor;}.nav-item.sub{padding-left:1.9rem;font-size:.78rem;}
+.nav-item .badge-admin{margin-left:auto;font-size:.55rem;font-weight:700;background:var(--primary);color:#fff;padding:.1rem .35rem;border-radius:100px;}
+.sidebar-footer{padding:.75rem .6rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.5rem;flex-shrink:0;}
+.theme-row{display:flex;align-items:center;justify-content:space-between;padding:.35rem .5rem;}
+.theme-label{font-size:.75rem;color:var(--text2);font-weight:500;display:flex;align-items:center;gap:.4rem;}.theme-label svg{width:.9rem;height:.9rem;}
+.theme-switch{width:2.4rem;height:1.3rem;border-radius:100px;background:var(--muted);border:1.5px solid var(--border);position:relative;transition:var(--tr);cursor:pointer;}
+.theme-switch.on{background:var(--primary);border-color:var(--primary);}
+.theme-switch::after{content:'';position:absolute;top:2px;left:2px;width:calc(1.3rem - 8px);height:calc(1.3rem - 8px);background:#fff;border-radius:50%;transition:var(--tr);}
+.theme-switch.on::after{transform:translateX(1.1rem);}
+.date-widget{padding:.4rem .5rem;background:var(--card);border-radius:var(--rs);font-size:.72rem;color:var(--text2);text-align:center;font-weight:500;}
+.user-row{display:flex;align-items:center;gap:.55rem;padding:.35rem .5rem;}
+.user-avatar{width:1.8rem;height:1.8rem;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-g));display:grid;place-items:center;font-size:.7rem;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;}
+.user-avatar img{width:100%;height:100%;object-fit:cover;}
+.user-name{font-size:.75rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-email{font-size:.62rem;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.role-badge{font-size:.55rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:.15rem .4rem;border-radius:100px;flex-shrink:0;}
+.role-badge.admin{background:rgba(108,61,204,.15);color:var(--primary);}.role-badge.user{background:var(--muted);color:var(--text2);}
+.btn-logout{display:flex;align-items:center;justify-content:center;gap:.45rem;padding:.45rem;border-radius:var(--rs);color:var(--danger);font-size:.78rem;font-weight:600;transition:var(--tr);}
+.btn-logout:hover{background:rgba(239,68,68,.08);}.btn-logout svg{width:.85rem;height:.85rem;}
+.sidebar-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);opacity:0;transition:opacity var(--tr);}.sidebar-overlay.show{opacity:1;}
+.topbar{display:none;height:var(--topbar-h);background:var(--surface);border-bottom:1px solid var(--border);align-items:center;gap:.75rem;padding:0 1rem;position:fixed;top:0;left:0;right:0;z-index:180;}
+.topbar-title{font-family:var(--font-d);font-weight:800;font-size:.85rem;flex:1;}
+.btn-menu{width:2.2rem;height:2.2rem;border-radius:var(--rs);background:var(--card);display:grid;place-items:center;transition:var(--tr);}.btn-menu:hover{background:var(--muted);}.btn-menu svg{width:1.1rem;height:1.1rem;}
+.main{margin-left:var(--sidebar-w);flex:1;min-width:0;display:flex;flex-direction:column;}
+.main-inner{padding:1.75rem 1.75rem 3rem;flex:1;}
+.page-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.page-title{font-family:var(--font-d);font-weight:800;font-size:1.5rem;color:var(--text);}
+.page-subtitle{font-size:.8rem;color:var(--text3);margin-top:.25rem;}
+.loan-layout{display:grid;grid-template-columns:1fr 360px;gap:1.25rem;align-items:start;max-width:1020px;}
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;animation:fadeUp .45s cubic-bezier(.34,1.26,.64,1) both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+.form-card-header{padding:1rem 1.4rem;background:linear-gradient(90deg,var(--primary),var(--primary-g));display:flex;align-items:center;gap:.75rem;}
+.form-card-header svg{width:1.15rem;height:1.15rem;color:#fff;}
+.form-card-header-title{font-family:var(--font-d);font-weight:700;font-size:.92rem;color:#fff;}
+.form-card-header-sub{font-size:.7rem;color:rgba(255,255,255,.75);margin-top:.1rem;}
+.form-section{padding:1.25rem 1.4rem;border-bottom:1px solid var(--border);}
+.form-section:last-of-type{border-bottom:none;}
+.section-label{font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:.9rem;display:flex;align-items:center;gap:.45rem;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}.section-label svg{width:.82rem;height:.82rem;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.85rem;}
+.span2{grid-column:span 2;}.span3{grid-column:span 3;}
+.form-group{display:flex;flex-direction:column;gap:.32rem;}
+.form-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);}
+.req{color:var(--danger);margin-left:.15rem;}.hint{font-size:.65rem;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;margin-left:.35rem;}
+.form-input,.form-select{padding:.6rem .9rem;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:.85rem;font-family:var(--font-b);transition:var(--tr);width:100%;}
+.form-input:focus,.form-select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--glow);background:var(--surface);}
+.form-input:disabled,.form-select:disabled{opacity:.6;cursor:not-allowed;background:var(--muted);}
+.form-input.error{border-color:var(--danger);box-shadow:0 0 0 3px rgba(239,68,68,.1);}
+.form-input::placeholder{color:var(--text3);}
+.form-error{font-size:.7rem;color:var(--danger);font-weight:500;display:none;margin-top:.2rem;}.form-error.show{display:block;}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238892b0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .75rem center;padding-right:2.2rem;}
+.client-info-box{background:rgba(108,61,204,.05);border:1px solid var(--border);border-radius:var(--rs);padding:.85rem 1rem;display:grid;grid-template-columns:1fr 1fr;gap:.5rem;animation:fadeIn .3s ease both;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+.cib-item{display:flex;flex-direction:column;gap:.15rem;}
+.cib-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);}
+.cib-value{font-size:.82rem;font-weight:600;color:var(--text);}
+.form-footer{padding:1rem 1.4rem;background:var(--card);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;gap:.65rem;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;gap:.45rem;padding:.58rem 1.15rem;border-radius:var(--rs);font-size:.83rem;font-weight:700;transition:var(--tr);white-space:nowrap;}
+.btn svg{width:.9rem;height:.9rem;}
+.btn-primary{background:var(--primary);color:#fff;}.btn-primary:hover{background:var(--primary-h);box-shadow:0 4px 18px var(--glow);transform:translateY(-1px);}
+.btn-ghost{background:var(--surface);color:var(--text2);border:1.5px solid var(--border);}.btn-ghost:hover{background:var(--muted);}
+.btn-success{background:var(--accent);color:#fff;}.btn-success:hover{background:#16a34a;box-shadow:0 4px 18px rgba(34,197,94,.35);transform:translateY(-1px);}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
+.right-panel{display:flex;flex-direction:column;gap:1rem;animation:fadeUp .45s .1s both;}
+.preview-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
+.pc-header{padding:.85rem 1.1rem;background:linear-gradient(90deg,var(--primary),var(--primary-g));display:flex;align-items:center;gap:.6rem;}
+.pc-header svg{width:1rem;height:1rem;color:#fff;}.pc-header-title{font-family:var(--font-d);font-weight:700;font-size:.85rem;color:#fff;}
+.pc-body{padding:1rem 1.1rem;}.pc-placeholder{text-align:center;color:var(--text3);font-size:.78rem;padding:.75rem 0;}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:.85rem;}
+.kpi-card{background:var(--card);border-radius:var(--rs);padding:.65rem .8rem;border:1px solid var(--border);}
+.kpi-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:.25rem;}
+.kpi-value{font-family:var(--font-d);font-weight:800;font-size:.95rem;color:var(--text);}
+.kpi-value.purple{color:var(--primary);}.kpi-value.green{color:#22c55e;}.kpi-value.amber{color:#d97706;}.kpi-value.red{color:var(--danger);}
+.mini-sched{width:100%;border-collapse:collapse;font-size:.75rem;}
+.mini-sched th{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);padding:.4rem .5rem;border-bottom:1px solid var(--border);text-align:right;}
+.mini-sched th:first-child{text-align:left;}
+.mini-sched td{padding:.45rem .5rem;border-bottom:1px solid var(--border);color:var(--text2);text-align:right;}
+.mini-sched td:first-child{text-align:left;font-weight:600;color:var(--text);}
+.mini-sched tr:last-child td{border-bottom:none;}.mini-sched tr:hover td{background:var(--card);}
+.more-rows{text-align:center;font-size:.7rem;color:var(--text3);padding:.5rem;font-style:italic;}
+.disb-box{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:var(--rs);padding:.65rem .85rem;display:flex;align-items:center;gap:.55rem;margin-top:.85rem;}
+.disb-box svg{width:.9rem;height:.9rem;color:#22c55e;flex-shrink:0;}
+.disb-label{font-size:.72rem;color:var(--text2);}.disb-date{font-family:var(--font-d);font-weight:700;color:#22c55e;margin-left:auto;}
+.success-banner{display:none;max-width:1020px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:2.75rem 1.5rem;text-align:center;box-shadow:var(--shadow-md);animation:fadeUp .4s ease both;}
+.success-banner.show{display:block;}
+.success-icon{width:4rem;height:4rem;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-g));display:grid;place-items:center;margin:0 auto 1.1rem;box-shadow:0 6px 20px var(--glow);animation:iconPop .5s .1s cubic-bezier(.34,1.56,.64,1) both;}
+.success-icon svg{width:1.75rem;height:1.75rem;color:#fff;}
+@keyframes iconPop{from{opacity:0;transform:scale(.5);}to{opacity:1;transform:scale(1);}}
+.success-title{font-family:var(--font-d);font-weight:800;font-size:1.15rem;color:var(--text);margin-bottom:.4rem;}
+.success-body{font-size:.85rem;color:var(--text3);margin-bottom:1rem;line-height:1.6;}
+.success-ln{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1.25rem;border-radius:100px;background:rgba(108,61,204,.1);color:var(--primary);font-family:var(--font-d);font-weight:800;font-size:1rem;margin-bottom:1.5rem;}
+.success-stats{display:flex;justify-content:center;gap:2rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.ss-item{text-align:center;}.ss-val{font-family:var(--font-d);font-weight:800;font-size:1.15rem;}
+.ss-lbl{font-size:.68rem;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:.15rem;}
+.success-actions{display:flex;gap:.65rem;justify-content:center;flex-wrap:wrap;}
+.toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;pointer-events:none;}
+.toast{padding:.65rem 1.1rem;border-radius:var(--rs);font-size:.8rem;font-weight:600;color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.25);animation:toastIn .3s ease both;pointer-events:auto;max-width:300px;}
+.toast-success{background:#22c55e;}.toast-error{background:var(--danger);}.toast-info{background:var(--primary);}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px) scale(.92);}to{opacity:1;transform:none;}}
+@keyframes toastOut{from{opacity:1;}to{opacity:0;transform:translateY(8px) scale(.92);}}
+@media(max-width:860px){.loan-layout{grid-template-columns:1fr;}}
+@media(max-width:768px){.sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);}.sidebar-overlay{display:block;}.topbar{display:flex;}.main{margin-left:0;padding-top:var(--topbar-h);}.main-inner{padding:1.25rem 1rem 3rem;}.g2,.g3{grid-template-columns:1fr;}.span2,.span3{grid-column:span 1;}.page-header{flex-direction:column;align-items:flex-start;}}
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header"><div class="sidebar-logo"><div class="sidebar-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><div><div class="sidebar-logo-title">LENDING MANAGEMENT</div><div class="sidebar-logo-sub">Loan Management System</div></div></div></div>
+  <nav class="sidebar-nav">
+    <span class="nav-label">Overview</span>
+    <a class="nav-item" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard Summary</a>
+    <a class="nav-item sub" href="monthly-profit.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Monthly Profit</a>
+    <a class="nav-item sub" href="past-due.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Past Due</a>
+    <a class="nav-item sub" href="cash-flow.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Cash Flow</a>
+    <span class="nav-label">Clients &amp; Loans</span>
+    <a class="nav-item" href="client-loan-summary.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Client Loan Summary</a>
+    <a class="nav-item active" href="new-loan.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>New Loan</a>
+    <a class="nav-item" href="loan-schedule.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Loan Schedule</a>
+    <a class="nav-item" href="payment-data.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payment Data</a>
+    <a class="nav-item" href="loan-data.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Loan Data</a>
+    <a class="nav-item" href="client-list.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Client List</a>
+    <span class="nav-label">Settings</span>
+    <a class="nav-item" href="setup.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Setup</a>
+    <a class="nav-item admin-only" href="user-management.html" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>User Management<span class="badge-admin">ADMIN</span></a>
+    <a class="nav-item admin-only" href="list-management.html" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>List Management<span class="badge-admin">ADMIN</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="theme-row"><span class="theme-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Dark Mode</span><div class="theme-switch" id="themeSwitch"></div></div>
+    <div class="date-widget" id="dateWidget">-</div>
+    <div class="user-row"><div class="user-avatar" id="userAvatar">?</div><div style="flex:1;min-width:0;"><div class="user-name" id="userName">Loading...</div><div class="user-email" id="userEmail"></div></div><span class="role-badge" id="roleBadge">-</span></div>
+    <button class="btn-logout" id="logoutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>
+  </div>
+</aside>
+<div class="topbar" id="topbar">
+  <button class="btn-menu" id="menuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  <span class="topbar-title">New Loan</span>
+  <button class="btn-menu" id="menuThemeBtn"><svg id="topIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg id="topIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+</div>
+<main class="main">
+<div class="main-inner">
+  <div class="page-header">
+    <div><h1 class="page-title">New Loan</h1><p class="page-subtitle">Create a new loan with automatic amortization schedule</p></div>
+    <a href="loan-data.html" class="btn btn-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>View All Loans</a>
+  </div>
+  <div class="success-banner" id="successBanner">
+    <div class="success-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <div class="success-title">Loan Created Successfully!</div>
+    <div class="success-body" id="successBody">The loan has been saved.</div>
+    <div class="success-ln" id="successLN">LN000001</div>
+    <div class="success-stats" id="successStats"></div>
+    <div class="success-actions">
+      <button class="btn btn-primary" id="addAnotherBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Loan</button>
+      <a href="loan-schedule.html" class="btn btn-success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>View Schedule</a>
+      <a href="new-payment.html" class="btn btn-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Record First Payment</a>
+    </div>
+  </div>
+  <div class="loan-layout" id="loanLayout">
+    <div class="form-card">
+      <div class="form-card-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><div><div class="form-card-header-title">Loan Application Form</div><div class="form-card-header-sub">Fields marked with * are required</div></div></div>
+      <div class="form-section">
+        <div class="section-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Select Client</div>
+        <div class="form-group" style="margin-bottom:.85rem;">
+          <label class="form-label" for="selClient">Client<span class="req">*</span></label>
+          <select class="form-select" id="selClient"><option value="">- Loading clients... -</option></select>
+          <div class="form-error" id="err-client">Please select a client.</div>
+        </div>
+        <div class="client-info-box" id="clientInfoBox" style="display:none;">
+          <div class="cib-item"><div class="cib-label">Full Name</div><div class="cib-value" id="cibName">-</div></div>
+          <div class="cib-item"><div class="cib-label">Phone</div><div class="cib-value" id="cibPhone">-</div></div>
+          <div class="cib-item"><div class="cib-label">Company</div><div class="cib-value" id="cibCompany">-</div></div>
+          <div class="cib-item"><div class="cib-label">Client ID</div><div class="cib-value" id="cibId">-</div></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="section-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Loan Parameters</div>
+        <div class="g2">
+          <div class="form-group"><label class="form-label" for="loanAmount">Loan Amount (P)<span class="req">*</span></label><input class="form-input" type="number" id="loanAmount" min="0" step="0.01" placeholder="50000"/><div class="form-error" id="err-amount">Enter a valid loan amount.</div></div>
+          <div class="form-group"><label class="form-label" for="loanPurpose">Purpose<span class="req">*</span></label><select class="form-select" id="loanPurpose"><option value="">- Select -</option><option>Business</option><option>Education</option><option>Emergency</option><option>Medical</option><option>Personal</option><option>Other</option></select><div class="form-error" id="err-purpose">Select a loan purpose.</div></div>
+          <div class="form-group"><label class="form-label" for="loanTerms">Loan Terms<span class="req">*</span></label><select class="form-select" id="loanTerms"><option value="">- Select -</option><option>Monthly</option><option>Semi Monthly</option><option>Weekly</option></select><div class="form-error" id="err-terms">Select loan terms.</div></div>
+          <div class="form-group"><label class="form-label" for="interestRate">Interest Rate (%)<span class="req">*</span><span class="hint">per period</span></label><input class="form-input" type="number" id="interestRate" min="0" step="0.01" placeholder="5"/><div class="form-error" id="err-rate">Enter an interest rate.</div></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="section-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Repayment Schedule</div>
+        <div class="g3">
+          <div class="form-group"><label class="form-label" for="numMonths">No. of Months<span class="req">*</span><span class="hint">decimals ok</span></label><input class="form-input" type="number" id="numMonths" min="0.5" step="0.5" placeholder="12"/><div class="form-error" id="err-months">Enter number of months.</div></div>
+          <div class="form-group"><label class="form-label" for="numPayments">No. of Payments<span class="hint">auto</span></label><input class="form-input" type="number" id="numPayments" readonly placeholder="Auto"/></div>
+          <div class="form-group"><label class="form-label" for="firstPayment">First Payment Date<span class="req">*</span></label><input class="form-input" type="date" id="firstPayment"/><div class="form-error" id="err-firstpay">Set first payment date.</div></div>
+          <div class="form-group span2"><label class="form-label" for="disbursement">Disbursement Date<span class="hint">auto-calculated</span></label><input class="form-input" type="date" id="disbursement" readonly/></div>
+        </div>
+      </div>
+      <div class="form-footer">
+        <button class="btn btn-ghost" id="clearBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Clear</button>
+        <button class="btn btn-primary" id="submitBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Create Loan</button>
+      </div>
+    </div>
+    <div class="right-panel">
+      <div class="preview-card">
+        <div class="pc-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="pc-header-title">Amortization Preview</span></div>
+        <div class="pc-body" id="previewBody"><div class="pc-placeholder">Fill in the loan details to see a live preview.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</main>
+<div class="toast-container" id="toastContainer"></div>
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import{getAuth,signOut,onAuthStateChanged}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import{getFirestore,collection,getDocs,addDoc,getDoc,doc,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const firebaseConfig={apiKey:"AIzaSyBjYXRXK2lGBdUiWku1rae7MTpYl3bl0hw",authDomain:"lending-management-app-460f5.firebaseapp.com",projectId:"lending-management-app-460f5",storageBucket:"lending-management-app-460f5.firebasestorage.app",messagingSenderId:"167550754445",appId:"1:167550754445:web:e1548d3b0f52b751ed0cc4"};
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmt=n=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP',minimumFractionDigits:2}).format(n||0);
+const fmtD=d=>{if(!d)return'-';const dt=d instanceof Date?d:new Date(d);return dt.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});};
+const toast=(msg,type='info',dur=3200)=>{const el=document.createElement('div');el.className=`toast toast-${type}`;el.textContent=msg;document.getElementById('toastContainer').appendChild(el);setTimeout(()=>{el.style.animation='toastOut .3s ease forwards';setTimeout(()=>el.remove(),300);},dur);};
+onAuthStateChanged(auth,async user=>{
+  if(!user){window.location.href='login.html';return;}
+  let sess=sessionStorage.getItem('lma_user');
+  if(!sess){const snap=await getDoc(doc(db,'user_roles',user.uid));const role=snap.exists()?snap.data().role:'pending';if(role==='pending'){window.location.href='login.html';return;}sessionStorage.setItem('lma_user',JSON.stringify({uid:user.uid,email:user.email,displayName:user.displayName,photoURL:user.photoURL,role}));}
+  const info=JSON.parse(sessionStorage.getItem('lma_user'));
+  if(info.role==='pending'){window.location.href='login.html';return;}
+  document.getElementById('userName').textContent=info.displayName||'User';
+  document.getElementById('userEmail').textContent=info.email||'';
+  const rb=document.getElementById('roleBadge');rb.textContent=info.role;rb.className=`role-badge ${info.role}`;
+  const av=document.getElementById('userAvatar');if(info.photoURL)av.innerHTML=`<img src="${info.photoURL}" alt=""/>`;else av.textContent=(info.displayName||'U')[0].toUpperCase();
+  if(info.role==='admin')document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
+  loadBorrowers();
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('clientId'))window._pre=params.get('clientId');
+});
+const now=new Date();
+document.getElementById('dateWidget').textContent=`${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+document.getElementById('logoutBtn').addEventListener('click',async()=>{await signOut(auth);sessionStorage.removeItem('lma_user');window.location.href='login.html';});
+(function(){const root=document.documentElement,sw=document.getElementById('themeSwitch'),s=document.getElementById('topIconSun'),m=document.getElementById('topIconMoon');
+function apply(t){root.setAttribute('data-theme',t);localStorage.setItem('lma_theme',t);sw.classList.toggle('on',t==='dark');if(s){s.style.display=t==='dark'?'none':'';m.style.display=t==='dark'?'':'none';}}
+apply(localStorage.getItem('lma_theme')||'light');
+sw.addEventListener('click',()=>apply(root.getAttribute('data-theme')==='dark'?'light':'dark'));
+document.getElementById('menuThemeBtn')?.addEventListener('click',()=>apply(root.getAttribute('data-theme')==='dark'?'light':'dark'));})();
+const sb=document.getElementById('sidebar'),ov=document.getElementById('sidebarOverlay');
+document.getElementById('menuBtn')?.addEventListener('click',()=>{sb.classList.add('open');ov.classList.add('show');});
+ov.addEventListener('click',()=>{sb.classList.remove('open');ov.classList.remove('show');});
+let allB=[];
+async function loadBorrowers(){
+  try{const snap=await getDocs(collection(db,'borrowers'));allB=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>`${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
+  const sel=document.getElementById('selClient');sel.innerHTML='<option value="">- Select client -</option>'+allB.map(b=>`<option value="${b.id}">${b.firstName} ${b.lastName} (${b.clientNumber||''})</option>`).join('');
+  if(window._pre){sel.value=window._pre;sel.dispatchEvent(new Event('change'));}}catch(e){toast('Error: '+e.message,'error');}
+}
+document.getElementById('selClient').addEventListener('change',function(){
+  const b=allB.find(x=>x.id===this.value),box=document.getElementById('clientInfoBox');
+  if(b){box.style.display='';document.getElementById('cibName').textContent=`${b.firstName} ${b.lastName}`;document.getElementById('cibPhone').textContent=b.phone||'-';document.getElementById('cibCompany').textContent=b.company||'-';document.getElementById('cibId').textContent=b.clientNumber||'-';}
+  else box.style.display='none';
+  document.getElementById('err-client').classList.remove('show');
+});
+function calcFP(P,r,n){if(!P||!r||!n)return 0;if(r===0)return P/n;return(P*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);}
+function calcN(terms,months){if(!terms||!months)return 0;if(terms==='Monthly')return Math.round(months);if(terms==='Semi Monthly')return Math.round(months*2);return Math.round(months*4);}
+function calcDisb(fp,terms){if(!fp||!terms)return'';const d=new Date(fp+'T00:00:00');if(terms==='Monthly')d.setMonth(d.getMonth()-1);else if(terms==='Semi Monthly')d.setDate(d.getDate()-15);else d.setDate(d.getDate()-7);return d.toISOString().split('T')[0];}
+function advD(d,terms){const dt=new Date(d);if(terms==='Monthly')dt.setMonth(dt.getMonth()+1);else if(terms==='Semi Monthly')dt.setDate(dt.getDate()+15);else dt.setDate(dt.getDate()+7);return dt;}
+['loanAmount','interestRate','loanTerms','numMonths','firstPayment'].forEach(id=>{document.getElementById(id).addEventListener('change',recalc);document.getElementById(id).addEventListener('input',recalc);});
+function recalc(){
+  const P=parseFloat(document.getElementById('loanAmount').value)||0;
+  const r=(parseFloat(document.getElementById('interestRate').value)||0)/100;
+  const terms=document.getElementById('loanTerms').value;
+  const months=parseFloat(document.getElementById('numMonths').value)||0;
+  const fp=document.getElementById('firstPayment').value;
+  const n=calcN(terms,months);
+  document.getElementById('numPayments').value=n||'';
+  document.getElementById('disbursement').value=calcDisb(fp,terms);
+  updatePreview(P,r,n,terms,fp);
+}
+function updatePreview(P,r,n,terms,fp){
+  const body=document.getElementById('previewBody');
+  if(!P||!r||!n||!fp){body.innerHTML='<div class="pc-placeholder">Fill in all parameters to see preview.</div>';return;}
+  const fpmt=calcFP(P,r,n),totalAmt=fpmt*n,totalInt=totalAmt-P;
+  let kpis=`<div class="kpi-grid"><div class="kpi-card"><div class="kpi-label">Fixed Payment</div><div class="kpi-value purple">${fmt(fpmt)}</div></div><div class="kpi-card"><div class="kpi-label">Total Payments</div><div class="kpi-value">${n} x ${terms}</div></div><div class="kpi-card"><div class="kpi-label">Total Amount</div><div class="kpi-value amber">${fmt(totalAmt)}</div></div><div class="kpi-card"><div class="kpi-label">Total Interest</div><div class="kpi-value red">${fmt(totalInt)}</div></div></div>`;
+  const SHOW=5;let rows='',bal=P,due=new Date(fp+'T00:00:00');
+  for(let i=0;i<Math.min(n,SHOW);i++){const int=bal*r,prin=fpmt-int,after=Math.max(0,bal-prin);rows+=`<tr><td>${i+1}</td><td style="color:var(--text3);font-size:.72rem;">${fmtD(due)}</td><td style="color:#d97706;">${fmt(int)}</td><td style="color:#22c55e;">${fmt(prin)}</td><td style="color:var(--danger);">${fmt(after)}</td></tr>`;bal=after;due=advD(due,terms);}
+  const more=n>SHOW?`<tr><td colspan="5" class="more-rows">... and ${n-SHOW} more payment${n-SHOW!==1?'s':''}</td></tr>`:'';
+  const disbDate=calcDisb(fp,terms);
+  body.innerHTML=kpis+`<table class="mini-sched"><thead><tr><th>#</th><th>Due Date</th><th>Interest</th><th>Principal</th><th>Balance</th></tr></thead><tbody>${rows}${more}</tbody></table>${disbDate?`<div class="disb-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/></svg><span class="disb-label">Disbursement Date</span><span class="disb-date">${fmtD(new Date(disbDate+'T00:00:00'))}</span></div>`:''}`;
+}
+function validate(){
+  const checks=[{id:'selClient',errId:'err-client',chk:v=>!!v},{id:'loanAmount',errId:'err-amount',chk:v=>parseFloat(v)>0},{id:'loanPurpose',errId:'err-purpose',chk:v=>!!v},{id:'loanTerms',errId:'err-terms',chk:v=>!!v},{id:'interestRate',errId:'err-rate',chk:v=>parseFloat(v)>=0&&v!==''},{id:'numMonths',errId:'err-months',chk:v=>parseFloat(v)>0},{id:'firstPayment',errId:'err-firstpay',chk:v=>!!v}];
+  let ok=true;
+  checks.forEach(({id,errId,chk})=>{const el=document.getElementById(id),err=document.getElementById(errId);if(!chk(el?.value||'')){err.classList.add('show');if(el.tagName!=='SELECT')el.classList.add('error');if(ok)el.focus();ok=false;}else{err.classList.remove('show');el.classList?.remove('error');}});
+  return ok;
+}
+document.getElementById('submitBtn').addEventListener('click',async()=>{
+  if(!validate())return;
+  const clientId=document.getElementById('selClient').value;
+  const P=parseFloat(document.getElementById('loanAmount').value);
+  const purpose=document.getElementById('loanPurpose').value;
+  const terms=document.getElementById('loanTerms').value;
+  const rate=parseFloat(document.getElementById('interestRate').value);
+  const months=parseFloat(document.getElementById('numMonths').value);
+  const n=parseInt(document.getElementById('numPayments').value)||0;
+  const fp=document.getElementById('firstPayment').value;
+  const disb=document.getElementById('disbursement').value;
+  const btn=document.getElementById('submitBtn');btn.disabled=true;
+  btn.innerHTML='<svg style="animation:spin .7s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Saving...';
+  try{
+    const snap=await getDocs(collection(db,'loans'));
+    const nums=snap.docs.map(d=>parseInt((d.data().loanNumber||'LN000000').replace('LN',''))||0);
+    const loanNumber=`LN${String((Math.max(0,...nums))+1).padStart(6,'0')}`;
+    await addDoc(collection(db,'loans'),{loanNumber,borrowerId:clientId,principal:P,interestRate:rate,terms,numMonths:months,numPayments:n,currentBalance:P,purpose,firstPaymentDate:fp,disbursementDate:disb,startDate:serverTimestamp(),status:'active',createdAt:serverTimestamp()});
+    const borrower=allB.find(b=>b.id===clientId);
+    const bName=borrower?`${borrower.firstName} ${borrower.lastName}`:'Client';
+    const fpmt=calcFP(P,rate/100,n),totalAmt=fpmt*n,totalInt=totalAmt-P;
+    document.getElementById('successBody').textContent=`Loan ${loanNumber} created for ${bName}. Amortization schedule is ready.`;
+    document.getElementById('successLN').textContent=loanNumber;
+    document.getElementById('successStats').innerHTML=`<div class="ss-item"><div class="ss-val" style="color:var(--primary);">${fmt(P)}</div><div class="ss-lbl">Principal</div></div><div class="ss-item"><div class="ss-val" style="color:#d97706;">${fmt(fpmt)}</div><div class="ss-lbl">Fixed Payment</div></div><div class="ss-item"><div class="ss-val" style="color:var(--danger);">${fmt(totalInt)}</div><div class="ss-lbl">Total Interest</div></div><div class="ss-item"><div class="ss-val" style="color:#22c55e;">${n}</div><div class="ss-lbl">Payments</div></div>`;
+    document.getElementById('loanLayout').style.display='none';document.getElementById('successBanner').classList.add('show');
+    toast(`Loan ${loanNumber} created for ${bName}! Proceed to Payment Form to record payments.`,'success');
+  }catch(err){toast('Error: '+err.message,'error');}
+  finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Create Loan';}
+});
+document.getElementById('addAnotherBtn').addEventListener('click',()=>{document.getElementById('successBanner').classList.remove('show');document.getElementById('loanLayout').style.display='';resetForm();window.scrollTo({top:0,behavior:'smooth'});});
+document.getElementById('clearBtn').addEventListener('click',resetForm);
+function resetForm(){['selClient','loanPurpose','loanTerms'].forEach(id=>document.getElementById(id).value='');['loanAmount','interestRate','numMonths','numPayments','firstPayment','disbursement'].forEach(id=>{const el=document.getElementById(id);el.value='';el.classList.remove('error');});document.getElementById('clientInfoBox').style.display='none';document.getElementById('previewBody').innerHTML='<div class="pc-placeholder">Fill in the loan details to see a live preview.</div>';document.querySelectorAll('.form-error').forEach(e=>e.classList.remove('show'));}
+const st=document.createElement('style');st.textContent='@keyframes spin{to{transform:rotate(360deg);}}';document.head.appendChild(st);
+</script>
+<script>(function(){const t=localStorage.getItem('lma_theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+</body>
+</html>

@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Login — Lending Management App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+     DESIGN TOKENS
+  ============================================================ */
+  :root {
+    --clr-bg:         #f7f5ff;
+    --clr-surface:    #ffffff;
+    --clr-card:       #eef0f5;
+    --clr-primary:    #6c3dcc;
+    --clr-primary-h:  #5a2fb5;
+    --clr-primary-g:  #8b5cf6;
+    --clr-accent:     #22c55e;
+    --clr-warning:    #eab308;
+    --clr-danger:     #ef4444;
+    --clr-muted:      #e8eaee;
+    --clr-text:       #1a1a2e;
+    --clr-text-2:     #4b5280;
+    --clr-text-3:     #8892b0;
+    --clr-border:     rgba(108,61,204,.15);
+    --clr-glow:       rgba(108,61,204,.18);
+    --radius:         1.25rem;
+    --radius-sm:      .75rem;
+    --shadow-card:    0 8px 40px rgba(108,61,204,.12), 0 1px 3px rgba(0,0,0,.06);
+    --shadow-btn:     0 4px 20px rgba(108,61,204,.35);
+    --font-display:   'Syne', sans-serif;
+    --font-body:      'Instrument Sans', sans-serif;
+    --transition:     .22s cubic-bezier(.4,0,.2,1);
+  }
+
+  [data-theme="dark"] {
+    --clr-bg:         #13111f;
+    --clr-surface:    #1e1b30;
+    --clr-card:       #272b3d;
+    --clr-primary:    #7c4dff;
+    --clr-primary-h:  #6e3fef;
+    --clr-primary-g:  #a78bfa;
+    --clr-muted:      #2e3350;
+    --clr-text:       #f0edff;
+    --clr-text-2:     #a8b0d0;
+    --clr-text-3:     #6070a0;
+    --clr-border:     rgba(124,77,255,.2);
+    --clr-glow:       rgba(124,77,255,.22);
+    --shadow-card:    0 8px 40px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.3);
+    --shadow-btn:     0 4px 20px rgba(124,77,255,.45);
+  }
+
+  /* ============================================================
+     RESET & BASE
+  ============================================================ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--clr-bg);
+    color: var(--clr-text);
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    overflow-x: hidden;
+    transition: background var(--transition), color var(--transition);
+    position: relative;
+  }
+
+  /* ============================================================
+     ANIMATED BACKGROUND
+  ============================================================ */
+  .bg-mesh {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .bg-mesh::before,
+  .bg-mesh::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: .35;
+    animation: drift 12s ease-in-out infinite alternate;
+  }
+
+  .bg-mesh::before {
+    width: 60vmax; height: 60vmax;
+    top: -20%; left: -15%;
+    background: radial-gradient(circle, var(--clr-primary) 0%, transparent 70%);
+    animation-duration: 14s;
+  }
+
+  .bg-mesh::after {
+    width: 45vmax; height: 45vmax;
+    bottom: -15%; right: -10%;
+    background: radial-gradient(circle, var(--clr-primary-g) 0%, transparent 70%);
+    animation-duration: 10s;
+    animation-delay: -5s;
+  }
+
+  @keyframes drift {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(4%, 6%) scale(1.08); }
+  }
+
+  /* Geometric grid overlay */
+  .bg-grid {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background-image:
+      linear-gradient(var(--clr-border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--clr-border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    pointer-events: none;
+  }
+
+  /* ============================================================
+     THEME TOGGLE
+  ============================================================ */
+  .theme-toggle {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.25rem;
+    z-index: 100;
+    width: 2.5rem; height: 2.5rem;
+    border-radius: 50%;
+    border: 1.5px solid var(--clr-border);
+    background: var(--clr-surface);
+    color: var(--clr-text-2);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: var(--transition);
+    box-shadow: 0 2px 12px var(--clr-glow);
+  }
+
+  .theme-toggle:hover {
+    background: var(--clr-primary);
+    color: #fff;
+    border-color: var(--clr-primary);
+    transform: rotate(15deg);
+  }
+
+  .theme-toggle svg { width: 1.1rem; height: 1.1rem; }
+
+  /* ============================================================
+     CARD
+  ============================================================ */
+  .login-wrapper {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 440px;
+    animation: slideUp .6s cubic-bezier(.34,1.56,.64,1) both;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(32px) scale(.97); }
+    to   { opacity: 1; transform: translateY(0)   scale(1); }
+  }
+
+  .login-card {
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius);
+    padding: 2.5rem 2.25rem;
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Accent bar */
+  .login-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--clr-primary), var(--clr-primary-g), var(--clr-accent));
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+
+  /* ============================================================
+     LOGO / HEADER
+  ============================================================ */
+  .logo-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
+  .logo-icon {
+    width: 3.5rem; height: 3.5rem;
+    background: linear-gradient(135deg, var(--clr-primary), var(--clr-primary-g));
+    border-radius: 1rem;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 6px 24px var(--clr-glow);
+    animation: iconPop .5s .2s cubic-bezier(.34,1.56,.64,1) both;
+  }
+
+  @keyframes iconPop {
+    from { opacity: 0; transform: scale(.6); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .logo-icon svg { width: 1.75rem; height: 1.75rem; color: #fff; }
+
+  .app-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.25rem;
+    letter-spacing: .02em;
+    color: var(--clr-text);
+    line-height: 1.2;
+    animation: fadeIn .5s .3s both;
+  }
+
+  .app-subtitle {
+    font-size: .8rem;
+    color: var(--clr-text-3);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    font-weight: 500;
+    animation: fadeIn .5s .4s both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============================================================
+     DIVIDER
+  ============================================================ */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: 1.5rem;
+    animation: fadeIn .5s .5s both;
+  }
+
+  .divider-line {
+    flex: 1;
+    height: 1px;
+    background: var(--clr-muted);
+  }
+
+  .divider-text {
+    font-size: .72rem;
+    color: var(--clr-text-3);
+    font-weight: 500;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* ============================================================
+     SIGN-IN BUTTON
+  ============================================================ */
+  .btn-google {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    padding: .85rem 1.5rem;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--clr-border);
+    background: var(--clr-card);
+    color: var(--clr-text);
+    font-family: var(--font-body);
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn .5s .55s both;
+    letter-spacing: .01em;
+  }
+
+  .btn-google::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--clr-primary), var(--clr-primary-g));
+    opacity: 0;
+    transition: opacity var(--transition);
+  }
+
+  .btn-google:hover {
+    border-color: var(--clr-primary);
+    color: #fff;
+    box-shadow: var(--shadow-btn);
+    transform: translateY(-1px);
+  }
+
+  .btn-google:hover::after { opacity: 1; }
+
+  .btn-google:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px var(--clr-glow);
+  }
+
+  .btn-google > * { position: relative; z-index: 1; }
+
+  .btn-google .google-icon { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+
+  .btn-google .btn-text { flex: 1; text-align: center; }
+
+  /* Loading state */
+  .btn-google.loading {
+    pointer-events: none;
+    opacity: .7;
+  }
+
+  .btn-google.loading .btn-text::after {
+    content: '';
+    display: inline-block;
+    width: .85rem; height: .85rem;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    margin-left: .5rem;
+    vertical-align: middle;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ============================================================
+     STATUS PANELS
+  ============================================================ */
+  .status-panel {
+    display: none;
+    border-radius: var(--radius-sm);
+    padding: 1.25rem;
+    margin-top: 1.25rem;
+    animation: fadeIn .35s ease both;
+  }
+
+  .status-panel.show { display: flex; }
+
+  .status-panel--pending {
+    background: rgba(234,179,8,.08);
+    border: 1px solid rgba(234,179,8,.3);
+    flex-direction: column;
+    gap: .5rem;
+    align-items: center;
+    text-align: center;
+  }
+
+  .status-panel--error {
+    background: rgba(239,68,68,.08);
+    border: 1px solid rgba(239,68,68,.3);
+    gap: .75rem;
+    align-items: flex-start;
+  }
+
+  .status-icon { font-size: 1.75rem; line-height: 1; }
+
+  .status-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: .95rem;
+    color: var(--clr-warning);
+  }
+
+  .status-panel--error .status-title { color: var(--clr-danger); }
+
+  .status-body {
+    font-size: .8rem;
+    color: var(--clr-text-2);
+    line-height: 1.5;
+  }
+
+  .btn-signout {
+    margin-top: .5rem;
+    padding: .45rem 1.1rem;
+    border-radius: 100px;
+    background: var(--clr-primary);
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: .8rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .btn-signout:hover { background: var(--clr-primary-h); transform: translateY(-1px); }
+
+  /* ============================================================
+     SKELETON LOADER
+  ============================================================ */
+  .skeleton-wrap {
+    display: none;
+    flex-direction: column;
+    gap: .75rem;
+    margin-top: .5rem;
+  }
+
+  .skeleton-wrap.show { display: flex; }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--clr-muted) 25%,
+      var(--clr-card) 50%,
+      var(--clr-muted) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: .5rem;
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .skel-text   { height: .75rem; }
+  .skel-btn    { height: 2.75rem; border-radius: var(--radius-sm); }
+  .skel-w-full { width: 100%; }
+  .skel-w-3-4  { width: 75%; }
+  .skel-w-1-2  { width: 50%; }
+
+  /* ============================================================
+     SUCCESS REDIRECT PANEL
+  ============================================================ */
+  .redirect-panel {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: .75rem;
+    padding: 1.25rem;
+    text-align: center;
+    animation: fadeIn .35s ease both;
+  }
+
+  .redirect-panel.show { display: flex; }
+
+  .redirect-spinner {
+    width: 2.5rem; height: 2.5rem;
+    border: 3px solid var(--clr-muted);
+    border-top-color: var(--clr-primary);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+
+  .redirect-text {
+    font-size: .85rem;
+    color: var(--clr-text-2);
+    font-weight: 500;
+  }
+
+  /* ============================================================
+     FOOTER
+  ============================================================ */
+  .footer-note {
+    margin-top: 1.5rem;
+    font-size: .72rem;
+    color: var(--clr-text-3);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    animation: fadeIn .5s .7s both;
+  }
+
+  .footer-note svg { width: .85rem; height: .85rem; flex-shrink: 0; }
+
+  /* ============================================================
+     TOAST
+  ============================================================ */
+  .toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    pointer-events: none;
+  }
+
+  .toast {
+    padding: .65rem 1.25rem;
+    border-radius: 100px;
+    font-size: .8rem;
+    font-weight: 600;
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,.2);
+    animation: toastIn .3s ease both;
+    pointer-events: auto;
+    white-space: nowrap;
+  }
+
+  .toast--success { background: var(--clr-accent); }
+  .toast--error   { background: var(--clr-danger); }
+  .toast--info    { background: var(--clr-primary); }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(12px) scale(.92); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes toastOut {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to   { opacity: 0; transform: translateY(8px) scale(.92); }
+  }
+
+  /* ============================================================
+     RESPONSIVE
+  ============================================================ */
+  @media (max-width: 480px) {
+    .login-card { padding: 2rem 1.5rem; }
+    .app-title  { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="bg-mesh" aria-hidden="true"></div>
+<div class="bg-grid"  aria-hidden="true"></div>
+
+<!-- Theme Toggle -->
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle light/dark mode">
+  <svg id="iconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+    <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </svg>
+  <svg id="iconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+</button>
+
+<!-- Main Card -->
+<div class="login-wrapper" role="main">
+  <div class="login-card">
+
+    <!-- Logo & Header -->
+    <div class="logo-wrap">
+      <div class="logo-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+          <path d="M7 10h.01M12 10h.01M17 10h.01"/>
+          <path d="M7 7h10"/>
+        </svg>
+      </div>
+      <h1 class="app-title">LENDING MANAGEMENT APP</h1>
+      <p class="app-subtitle">Loan Management System</p>
+    </div>
+
+    <!-- Skeleton (shown while checking auth state) -->
+    <div class="skeleton-wrap show" id="skeletonWrap" aria-label="Loading..." aria-live="polite">
+      <div class="skeleton skel-text skel-w-1-2" style="margin: 0 auto .25rem;"></div>
+      <div class="skeleton skel-btn skel-w-full"></div>
+      <div class="skeleton skel-text skel-w-3-4" style="margin: .25rem auto 0;"></div>
+    </div>
+
+    <!-- Sign-In Section (hidden until auth check done) -->
+    <div id="signInSection" style="display:none;">
+      <div class="divider">
+        <span class="divider-line"></span>
+        <span class="divider-text">Sign in to continue</span>
+        <span class="divider-line"></span>
+      </div>
+
+      <button class="btn-google" id="googleSignInBtn" aria-label="Sign in with Google">
+        <!-- Google SVG -->
+        <svg class="google-icon" viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          <path fill="none" d="M0 0h48v48H0z"/>
+        </svg>
+        <span class="btn-text">Sign in with Google</span>
+      </button>
+    </div>
+
+    <!-- Pending Panel -->
+    <div class="status-panel status-panel--pending" id="pendingPanel" role="alert" aria-live="polite">
+      <span class="status-icon">⏳</span>
+      <p class="status-title">Account Pending Approval</p>
+      <p class="status-body">Your account has been created and is awaiting administrator approval. You'll be able to access the system once approved.</p>
+      <button class="btn-signout" id="signOutBtn1">Sign out</button>
+    </div>
+
+    <!-- Error Panel -->
+    <div class="status-panel status-panel--error" id="errorPanel" role="alert" aria-live="assertive">
+      <span class="status-icon">⚠️</span>
+      <div>
+        <p class="status-title" id="errorTitle">Sign-In Error</p>
+        <p class="status-body" id="errorBody"></p>
+      </div>
+    </div>
+
+    <!-- Redirect Panel -->
+    <div class="redirect-panel" id="redirectPanel" role="status" aria-live="polite">
+      <div class="redirect-spinner" aria-hidden="true"></div>
+      <p class="redirect-text">Signing you in — redirecting to Dashboard…</p>
+    </div>
+
+    <!-- Footer -->
+    <p class="footer-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      Only authorized Google accounts can access this system
+    </p>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+<!-- ============================================================
+     FIREBASE SDK
+============================================================ -->
+<script type="module">
+import { initializeApp }                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+                                                from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, getDocs, collection, query, where, deleteDoc, serverTimestamp }
+                                                from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+/* ── Firebase Config ──────────────────────────────────────── */
+const firebaseConfig = {
+  apiKey:            "AIzaSyBjYXRXK2lGBdUiWku1rae7MTpYl3bl0hw",
+  authDomain:        "lending-management-app-460f5.firebaseapp.com",
+  projectId:         "lending-management-app-460f5",
+  storageBucket:     "lending-management-app-460f5.firebasestorage.app",
+  messagingSenderId: "167550754445",
+  appId:             "1:167550754445:web:e1548d3b0f52b751ed0cc4"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+/* ── DOM Refs ─────────────────────────────────────────────── */
+const $skeleton      = document.getElementById('skeletonWrap');
+const $signInSection = document.getElementById('signInSection');
+const $googleBtn     = document.getElementById('googleSignInBtn');
+const $pendingPanel  = document.getElementById('pendingPanel');
+const $errorPanel    = document.getElementById('errorPanel');
+const $errorTitle    = document.getElementById('errorTitle');
+const $errorBody     = document.getElementById('errorBody');
+const $redirectPanel = document.getElementById('redirectPanel');
+
+/* ── Toast ────────────────────────────────────────────────── */
+function showToast(msg, type = 'info', duration = 3500) {
+  const el = document.createElement('div');
+  el.className = `toast toast--${type}`;
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => {
+    el.style.animation = 'toastOut .3s ease forwards';
+    setTimeout(() => el.remove(), 300);
+  }, duration);
+}
+
+/* ── Show / Hide helpers ──────────────────────────────────── */
+function showOnly(id) {
+  ['skeletonWrap','signInSection','pendingPanel','errorPanel','redirectPanel']
+    .forEach(s => {
+      const el = document.getElementById(s);
+      if (!el) return;
+      if (s === id) {
+        el.style.display = '';
+        if (s === 'skeletonWrap') el.classList.add('show');
+        else { el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
+      } else {
+        el.style.display = 'none';
+        el.classList.remove('show');
+      }
+    });
+}
+
+/* ── Auth state change ────────────────────────────────────── */
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    // Not logged in → show sign-in button
+    showOnly('signInSection');
+    $signInSection.style.display = '';
+    return;
+  }
+
+  // User is authenticated — check role
+  showOnly('skeletonWrap');
+  try {
+    const role = await resolveRole(user);
+    if (role === 'pending') {
+      showOnly('pendingPanel');
+    } else {
+      // Store session info
+      sessionStorage.setItem('lma_user', JSON.stringify({
+        uid:         user.uid,
+        email:       user.email,
+        displayName: user.displayName,
+        photoURL:    user.photoURL,
+        role
+      }));
+      showOnly('redirectPanel');
+      showToast(`Welcome back, ${user.displayName?.split(' ')[0] || 'User'}! 🎉`, 'success');
+      setTimeout(() => { window.location.href = 'index.html'; }, 1400);
+    }
+  } catch (err) {
+    console.error(err);
+    showErrorPanel('Authentication Error', err.message || 'Unable to verify your account. Please try again.');
+  }
+});
+
+/* ── Resolve Role ─────────────────────────────────────────── */
+async function resolveRole(user) {
+  const roleRef  = doc(db, 'user_roles', user.uid);
+  const roleSnap = await getDoc(roleRef);
+
+  if (roleSnap.exists()) {
+    return roleSnap.data().role;
+  }
+
+  // Check pre_registered_emails
+  const preQ    = query(collection(db, 'pre_registered_emails'), where('email', '==', user.email));
+  const preSnap = await getDocs(preQ);
+
+  if (!preSnap.empty) {
+    const preDoc  = preSnap.docs[0];
+    const preRole = preDoc.data().role || 'user';
+    await setDoc(roleRef, {
+      uid:         user.uid,
+      email:       user.email,
+      displayName: user.displayName || '',
+      role:        preRole,
+      createdAt:   serverTimestamp()
+    });
+    await deleteDoc(preDoc.ref);
+    return preRole;
+  }
+
+  // Check if any admin exists
+  const adminQ    = query(collection(db, 'user_roles'), where('role', '==', 'admin'));
+  const adminSnap = await getDocs(adminQ);
+  const isFirst   = adminSnap.empty;
+  const newRole   = isFirst ? 'admin' : 'pending';
+
+  await setDoc(roleRef, {
+    uid:         user.uid,
+    email:       user.email,
+    displayName: user.displayName || '',
+    role:        newRole,
+    createdAt:   serverTimestamp()
+  });
+
+  if (isFirst) showToast('🎉 First user detected — you\'ve been assigned as Admin!', 'success', 4000);
+  return newRole;
+}
+
+/* ── Google Sign-In ───────────────────────────────────────── */
+$googleBtn.addEventListener('click', async () => {
+  $googleBtn.classList.add('loading');
+  $errorPanel.classList.remove('show');
+  $errorPanel.style.display = 'none';
+
+  try {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    await signInWithPopup(auth, provider);
+    // onAuthStateChanged handles the rest
+  } catch (err) {
+    $googleBtn.classList.remove('loading');
+    if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
+    showErrorPanel('Sign-In Failed', friendlyError(err.code));
+    showToast('Sign-in failed. Please try again.', 'error');
+  }
+});
+
+/* ── Sign Out Buttons ─────────────────────────────────────── */
+['signOutBtn1'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', async () => {
+    sessionStorage.removeItem('lma_user');
+    await signOut(auth);
+    showOnly('signInSection');
+    $signInSection.style.display = '';
+    showToast('Signed out successfully.', 'info');
+  });
+});
+
+/* ── Helpers ──────────────────────────────────────────────── */
+function showErrorPanel(title, body) {
+  $errorTitle.textContent = title;
+  $errorBody.textContent  = body;
+  $errorPanel.style.display = '';
+  $errorPanel.classList.remove('show');
+  void $errorPanel.offsetWidth;
+  $errorPanel.classList.add('show');
+}
+
+function friendlyError(code) {
+  const map = {
+    'auth/network-request-failed':  'Network error. Please check your connection.',
+    'auth/too-many-requests':        'Too many attempts. Please wait and try again.',
+    'auth/user-disabled':            'This account has been disabled.',
+    'auth/popup-blocked':            'Popup was blocked by your browser. Please allow popups and try again.',
+  };
+  return map[code] || 'An unexpected error occurred. Please try again.';
+}
+</script>
+
+<!-- ============================================================
+     THEME TOGGLE SCRIPT (non-module, runs immediately)
+============================================================ -->
+<script>
+(function () {
+  const root = document.documentElement;
+  const btn  = document.getElementById('themeToggle');
+  const sun  = document.getElementById('iconSun');
+  const moon = document.getElementById('iconMoon');
+
+  function applyTheme(t) {
+    root.setAttribute('data-theme', t);
+    localStorage.setItem('lma_theme', t);
+    if (t === 'dark') { sun.style.display = 'none'; moon.style.display = ''; }
+    else              { sun.style.display = '';     moon.style.display = 'none'; }
+  }
+
+  // Load persisted theme
+  const saved = localStorage.getItem('lma_theme') || 'light';
+  applyTheme(saved);
+
+  btn.addEventListener('click', () => {
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+  });
+})();
+</script>
+
+</body>
+</html>

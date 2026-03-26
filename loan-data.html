@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Loan Data — Lending Management App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f4f6fb;--surface:#ffffff;--card:#eef0f5;
+  --primary:#6c3dcc;--primary-h:#5a2fb5;--primary-g:#8b5cf6;
+  --accent:#22c55e;--warn:#eab308;--danger:#ef4444;--muted:#e8eaee;
+  --text:#1a1a2e;--text2:#4b5280;--text3:#8892b0;
+  --border:rgba(108,61,204,.13);--glow:rgba(108,61,204,.15);
+  --sidebar-w:260px;--topbar-h:60px;
+  --r:1rem;--rs:.6rem;
+  --tr:.22s cubic-bezier(.4,0,.2,1);
+  --shadow:0 2px 16px rgba(108,61,204,.08),0 1px 3px rgba(0,0,0,.04);
+  --shadow-md:0 4px 28px rgba(108,61,204,.12),0 2px 6px rgba(0,0,0,.06);
+  --font-d:'Syne',sans-serif;--font-b:'Instrument Sans',sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#13111f;--surface:#1e1b30;--card:#272b3d;
+  --primary:#7c4dff;--primary-h:#6e3fef;--primary-g:#a78bfa;
+  --muted:#2e3350;--text:#f0edff;--text2:#a8b0d0;--text3:#6070a0;
+  --border:rgba(124,77,255,.18);--glow:rgba(124,77,255,.2);
+  --shadow:0 2px 16px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.2);
+  --shadow-md:0 4px 28px rgba(0,0,0,.42),0 2px 6px rgba(0,0,0,.25);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;}
+body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height:100dvh;display:flex;overflow-x:hidden;transition:background var(--tr),color var(--tr);}
+button{font-family:var(--font-b);cursor:pointer;border:none;background:none;}
+a{text-decoration:none;color:inherit;}
+input,select,textarea{font-family:var(--font-b);}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100dvh;position:fixed;left:0;top:0;z-index:200;transition:transform var(--tr),background var(--tr);overflow:hidden;}
+.sidebar-header{padding:1.25rem 1.1rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sidebar-logo{display:flex;align-items:center;gap:.65rem;}
+.sidebar-logo-icon{width:2.1rem;height:2.1rem;border-radius:.55rem;background:linear-gradient(135deg,var(--primary),var(--primary-g));display:grid;place-items:center;flex-shrink:0;}
+.sidebar-logo-icon svg{width:1.1rem;height:1.1rem;color:#fff;}
+.sidebar-logo-title{font-family:var(--font-d);font-weight:800;font-size:.78rem;line-height:1.15;color:var(--text);}
+.sidebar-logo-sub{font-size:.62rem;color:var(--text3);font-weight:500;letter-spacing:.05em;margin-top:.1rem;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:.75rem .6rem;display:flex;flex-direction:column;gap:.15rem;}
+.sidebar-nav::-webkit-scrollbar{width:3px;}
+.sidebar-nav::-webkit-scrollbar-thumb{background:var(--muted);border-radius:10px;}
+.nav-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:.5rem .65rem .25rem;margin-top:.35rem;}
+.nav-item{display:flex;align-items:center;gap:.6rem;padding:.55rem .7rem;border-radius:var(--rs);color:var(--text2);font-size:.82rem;font-weight:500;transition:var(--tr);}
+.nav-item:hover{background:var(--muted);color:var(--text);}
+.nav-item.active{background:var(--primary);color:#fff;}
+.nav-item svg{width:1rem;height:1rem;flex-shrink:0;color:var(--text3);transition:var(--tr);}
+.nav-item:hover svg,.nav-item.active svg{color:currentColor;}
+.nav-item.sub{padding-left:1.9rem;font-size:.78rem;}
+.nav-item .badge-admin{margin-left:auto;font-size:.55rem;font-weight:700;background:var(--primary);color:#fff;padding:.1rem .35rem;border-radius:100px;}
+.sidebar-footer{padding:.75rem .6rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.5rem;flex-shrink:0;}
+.theme-row{display:flex;align-items:center;justify-content:space-between;padding:.35rem .5rem;}
+.theme-label{font-size:.75rem;color:var(--text2);font-weight:500;display:flex;align-items:center;gap:.4rem;}
+.theme-label svg{width:.9rem;height:.9rem;}
+.theme-switch{width:2.4rem;height:1.3rem;border-radius:100px;background:var(--muted);border:1.5px solid var(--border);position:relative;transition:var(--tr);cursor:pointer;}
+.theme-switch.on{background:var(--primary);border-color:var(--primary);}
+.theme-switch::after{content:'';position:absolute;top:2px;left:2px;width:calc(1.3rem - 8px);height:calc(1.3rem - 8px);background:#fff;border-radius:50%;transition:var(--tr);}
+.theme-switch.on::after{transform:translateX(1.1rem);}
+.date-widget{padding:.4rem .5rem;background:var(--card);border-radius:var(--rs);font-size:.72rem;color:var(--text2);text-align:center;font-weight:500;}
+.user-row{display:flex;align-items:center;gap:.55rem;padding:.35rem .5rem;}
+.user-avatar{width:1.8rem;height:1.8rem;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-g));display:grid;place-items:center;font-size:.7rem;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;}
+.user-avatar img{width:100%;height:100%;object-fit:cover;}
+.user-name{font-size:.75rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-email{font-size:.62rem;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.role-badge{font-size:.55rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:.15rem .4rem;border-radius:100px;flex-shrink:0;}
+.role-badge.admin{background:rgba(108,61,204,.15);color:var(--primary);}
+.role-badge.user{background:var(--muted);color:var(--text2);}
+.btn-logout{display:flex;align-items:center;justify-content:center;gap:.45rem;padding:.45rem;border-radius:var(--rs);color:var(--danger);font-size:.78rem;font-weight:600;transition:var(--tr);}
+.btn-logout:hover{background:rgba(239,68,68,.08);}
+.btn-logout svg{width:.85rem;height:.85rem;}
+.sidebar-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);opacity:0;transition:opacity var(--tr);}
+.sidebar-overlay.show{opacity:1;}
+
+/* ── TOPBAR ── */
+.topbar{display:none;height:var(--topbar-h);background:var(--surface);border-bottom:1px solid var(--border);align-items:center;gap:.75rem;padding:0 1rem;position:fixed;top:0;left:0;right:0;z-index:180;}
+.topbar-title{font-family:var(--font-d);font-weight:800;font-size:.85rem;flex:1;}
+.btn-menu{width:2.2rem;height:2.2rem;border-radius:var(--rs);background:var(--card);display:grid;place-items:center;transition:var(--tr);}
+.btn-menu:hover{background:var(--muted);}
+.btn-menu svg{width:1.1rem;height:1.1rem;}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar-w);flex:1;min-width:0;display:flex;flex-direction:column;}
+.main-inner{padding:1.75rem 1.75rem 3rem;flex:1;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.page-title{font-family:var(--font-d);font-weight:800;font-size:1.5rem;color:var(--text);}
+.page-subtitle{font-size:.8rem;color:var(--text3);margin-top:.25rem;}
+
+/* ── SUMMARY CARDS ── */
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;}
+.summary-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:1.35rem 1.4rem;box-shadow:var(--shadow);transition:var(--tr);
+  animation:fadeUp .5s cubic-bezier(.34,1.26,.64,1) both;position:relative;overflow:hidden;
+}
+.summary-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0;}
+.sc-purple::before{background:linear-gradient(90deg,var(--primary),var(--primary-g));}
+.sc-green::before{background:linear-gradient(90deg,#22c55e,#86efac);}
+.summary-card:nth-child(1){animation-delay:.05s;}
+.summary-card:nth-child(2){animation-delay:.12s;}
+.summary-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.sc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.85rem;}
+.sc-icon{width:2.5rem;height:2.5rem;border-radius:.65rem;display:grid;place-items:center;}
+.sc-icon svg{width:1.2rem;height:1.2rem;}
+.ic-purple{background:rgba(108,61,204,.12);color:var(--primary);}
+.ic-green{background:rgba(34,197,94,.12);color:#22c55e;}
+.sc-label{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:.35rem;}
+.sc-value{font-family:var(--font-d);font-weight:800;font-size:1.55rem;color:var(--text);line-height:1;}
+.sc-sub{font-size:.72rem;color:var(--text3);margin-top:.3rem;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+/* ── FILTER BAR ── */
+.filter-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.85rem 1.1rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:.65rem;flex-wrap:wrap;box-shadow:var(--shadow);animation:fadeUp .5s .1s both;}
+.filter-label{font-size:.75rem;font-weight:700;color:var(--text2);white-space:nowrap;}
+.filter-input{padding:.48rem .85rem;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:.82rem;font-family:var(--font-b);transition:var(--tr);min-width:180px;}
+.filter-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--glow);}
+.filter-select{padding:.48rem .85rem;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:.82rem;font-family:var(--font-b);font-weight:500;transition:var(--tr);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238892b0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .65rem center;padding-right:2rem;}
+.filter-select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--glow);}
+.filter-spacer{flex:1;}
+.result-count{font-size:.78rem;color:var(--text3);font-weight:500;white-space:nowrap;}
+
+/* ── TABLE ── */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;animation:fadeUp .5s .16s both;}
+.table-head{padding:.9rem 1.35rem;background:linear-gradient(90deg,var(--primary),var(--primary-g));display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;}
+.th-title{font-family:var(--font-d);font-weight:700;font-size:.9rem;color:#fff;}
+.th-sub{font-size:.72rem;color:rgba(255,255,255,.72);}
+.table-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:900px;}
+th{font-size:.63rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);padding:.65rem 1rem;text-align:left;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;}
+th:hover{color:var(--primary);}
+th .sort-icon{display:inline-block;margin-left:.3rem;opacity:.35;font-size:.7rem;}
+th.sorted .sort-icon{opacity:1;color:var(--primary);}
+td{font-size:.79rem;padding:.68rem 1rem;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--card);}
+.td-name{font-weight:700;color:var(--text);}
+.td-sub{font-size:.67rem;color:var(--text3);margin-top:.1rem;}
+.td-mono{font-family:monospace;font-size:.75rem;}
+.td-num{font-family:var(--font-d);font-weight:700;}
+.td-green{color:#22c55e;}
+.td-red{color:var(--danger);}
+.td-purple{color:var(--primary);}
+.status-pill{display:inline-flex;align-items:center;gap:.28rem;padding:.17rem .58rem;border-radius:100px;font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;}
+.pill-active{background:rgba(34,197,94,.1);color:#22c55e;}
+.pill-paid{background:var(--muted);color:var(--text3);}
+.pill-past{background:rgba(239,68,68,.1);color:var(--danger);}
+.payments-badge{display:inline-flex;align-items:center;gap:.25rem;padding:.15rem .55rem;border-radius:100px;font-size:.65rem;font-weight:700;background:rgba(108,61,204,.1);color:var(--primary);}
+.btn-edit{display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .65rem;border-radius:var(--rs);background:rgba(108,61,204,.08);color:var(--primary);border:1px solid rgba(108,61,204,.2);font-size:.7rem;font-weight:600;transition:var(--tr);}
+.btn-edit:hover{background:var(--primary);color:#fff;}
+.btn-edit svg{width:.72rem;height:.72rem;}
+
+/* ── PAGINATION ── */
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.1rem;border-top:1px solid var(--border);flex-wrap:wrap;gap:.75rem;}
+.pag-info{font-size:.75rem;color:var(--text3);font-weight:500;}
+.pag-controls{display:flex;gap:.4rem;align-items:center;}
+.pag-btn{width:2rem;height:2rem;border-radius:var(--rs);display:grid;place-items:center;font-size:.78rem;font-weight:600;background:var(--card);color:var(--text2);border:1px solid var(--border);transition:var(--tr);cursor:pointer;}
+.pag-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
+.pag-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.pag-btn:disabled{opacity:.4;cursor:not-allowed;}
+.pag-btn svg{width:.85rem;height:.85rem;}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:3.5rem 1rem;}
+.empty-icon{width:4rem;height:4rem;border-radius:50%;background:rgba(108,61,204,.08);border:2px solid rgba(108,61,204,.12);display:grid;place-items:center;margin:0 auto 1rem;}
+.empty-icon svg{width:1.75rem;height:1.75rem;color:var(--primary);opacity:.5;}
+.empty-title{font-family:var(--font-d);font-weight:700;font-size:.95rem;color:var(--text);margin-bottom:.3rem;}
+.empty-body{font-size:.8rem;color:var(--text3);}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);display:grid;place-items:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity var(--tr);}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 8px 40px rgba(0,0,0,.25);width:100%;max-width:560px;max-height:90dvh;display:flex;flex-direction:column;transform:scale(.95) translateY(10px);transition:transform var(--tr);overflow:hidden;}
+.modal-overlay.open .modal{transform:none;}
+.modal-header{padding:1.1rem 1.35rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-title{font-family:var(--font-d);font-weight:800;font-size:.95rem;color:var(--text);}
+.modal-close{width:1.9rem;height:1.9rem;border-radius:50%;background:var(--muted);color:var(--text2);display:grid;place-items:center;transition:var(--tr);}
+.modal-close:hover{background:var(--danger);color:#fff;}
+.modal-close svg{width:.85rem;height:.85rem;}
+.modal-body{padding:1.2rem 1.35rem;overflow-y:auto;flex:1;}
+.modal-footer{padding:.9rem 1.35rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.65rem;flex-shrink:0;}
+
+/* ── FORM ── */
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;}
+.form-group{display:flex;flex-direction:column;gap:.32rem;}
+.form-group.span-2{grid-column:span 2;}
+.form-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);}
+.form-label span{color:var(--danger);}
+.form-input,.form-select{padding:.58rem .85rem;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:.85rem;font-family:var(--font-b);transition:var(--tr);width:100%;}
+.form-input:focus,.form-select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--glow);background:var(--surface);}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238892b0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .75rem center;padding-right:2.2rem;}
+.form-hint{font-size:.68rem;color:var(--text3);margin-top:.15rem;}
+.section-divider{grid-column:span 2;border:none;border-top:1px solid var(--border);margin:.2rem 0;}
+.section-mini-label{grid-column:span 2;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);padding-top:.1rem;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:.45rem;padding:.55rem 1.1rem;border-radius:var(--rs);font-size:.82rem;font-weight:600;transition:var(--tr);white-space:nowrap;}
+.btn svg{width:.88rem;height:.88rem;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-h);box-shadow:0 4px 16px var(--glow);transform:translateY(-1px);}
+.btn-ghost{background:var(--card);color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--muted);}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none!important;}
+
+/* ── SKEL ── */
+.skel{background:linear-gradient(90deg,var(--muted) 25%,var(--card) 50%,var(--muted) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:.4rem;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+/* ── TOAST ── */
+.toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;pointer-events:none;}
+.toast{padding:.65rem 1.1rem;border-radius:var(--rs);font-size:.8rem;font-weight:600;color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.25);animation:toastIn .3s ease both;pointer-events:auto;max-width:300px;}
+.toast-success{background:#22c55e;}.toast-error{background:var(--danger);}.toast-info{background:var(--primary);}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px) scale(.92);}to{opacity:1;transform:none;}}
+@keyframes toastOut{from{opacity:1;}to{opacity:0;transform:translateY(8px) scale(.92);}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){.summary-grid{grid-template-columns:1fr;}}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay{display:block;}
+  .topbar{display:flex;}
+  .main{margin-left:0;padding-top:var(--topbar-h);}
+  .main-inner{padding:1.25rem 1rem 3rem;}
+  .page-header{flex-direction:column;align-items:flex-start;}
+  .form-grid-2{grid-template-columns:1fr;}
+  .form-group.span-2,.section-divider,.section-mini-label{grid-column:span 1;}
+}
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <div>
+        <div class="sidebar-logo-title">LENDING MANAGEMENT</div>
+        <div class="sidebar-logo-sub">Loan Management System</div>
+      </div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <span class="nav-label">Overview</span>
+    <a class="nav-item" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard Summary</a>
+    <a class="nav-item sub" href="monthly-profit.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Monthly Profit</a>
+    <a class="nav-item sub" href="past-due.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Past Due</a>
+    <a class="nav-item sub" href="cash-flow.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Cash Flow</a>
+    <span class="nav-label">Clients & Loans</span>
+    <a class="nav-item" href="client-loan-summary.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Client Loan Summary</a>
+    <a class="nav-item" href="loan-schedule.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Loan Schedule</a>
+    <a class="nav-item" href="payment-data.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payment Data</a>
+    <a class="nav-item active" href="loan-data.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Loan Data</a>
+    <a class="nav-item" href="client-list.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Client List</a>
+    <span class="nav-label">Settings</span>
+    <a class="nav-item" href="setup.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Setup</a>
+    <a class="nav-item admin-only" href="user-management.html" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>User Management<span class="badge-admin">ADMIN</span></a>
+    <a class="nav-item admin-only" href="list-management.html" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>List Management<span class="badge-admin">ADMIN</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="theme-row">
+      <span class="theme-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Dark Mode</span>
+      <div class="theme-switch" id="themeSwitch"></div>
+    </div>
+    <div class="date-widget" id="dateWidget">—</div>
+    <div class="user-row">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div style="flex:1;min-width:0;"><div class="user-name" id="userName">Loading…</div><div class="user-email" id="userEmail"></div></div>
+      <span class="role-badge" id="roleBadge">—</span>
+    </div>
+    <button class="btn-logout" id="logoutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>
+  </div>
+</aside>
+
+<!-- Mobile Topbar -->
+<div class="topbar" id="topbar">
+  <button class="btn-menu" id="menuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  <span class="topbar-title">Loan Data</span>
+  <button class="btn-menu" id="menuThemeBtn">
+    <svg id="topIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg id="topIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+<div class="main-inner">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Loan Data</h1>
+      <p class="page-subtitle">View and manage all loans across all borrowers</p>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+    <div class="summary-card sc-purple">
+      <div class="sc-top">
+        <div class="sc-icon ic-purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+      </div>
+      <div class="sc-label">Current Active Loans</div>
+      <div class="sc-value" id="activeCount"><div class="skel" style="height:1.5rem;width:4rem;"></div></div>
+      <div class="sc-sub" id="activeSub">Loading…</div>
+    </div>
+    <div class="summary-card sc-green">
+      <div class="sc-top">
+        <div class="sc-icon ic-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+      </div>
+      <div class="sc-label">Total Principal (All Loans)</div>
+      <div class="sc-value" id="totalPrincipal"><div class="skel" style="height:1.5rem;width:9rem;"></div></div>
+      <div class="sc-sub" id="principalSub">Loading…</div>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <span class="filter-label">Search:</span>
+    <input class="filter-input" type="text" id="searchInput" placeholder="Name, Loan ID, or purpose…"/>
+    <span class="filter-label">Status:</span>
+    <select class="filter-select" id="filterStatus">
+      <option value="all">All Status</option>
+      <option value="active">Active</option>
+      <option value="paid">Paid</option>
+      <option value="past_due">Past Due</option>
+    </select>
+    <span class="filter-label">Terms:</span>
+    <select class="filter-select" id="filterTerms">
+      <option value="all">All Terms</option>
+      <option value="Monthly">Monthly</option>
+      <option value="Semi Monthly">Semi Monthly</option>
+      <option value="Weekly">Weekly</option>
+    </select>
+    <div class="filter-spacer"></div>
+    <span class="result-count" id="resultCount">Loading…</span>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <div class="table-head">
+      <span class="th-title">All Loans</span>
+      <span class="th-sub" id="tableSubtitle">sorted by most recent</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th data-col="borrower">Full Name <span class="sort-icon">↕</span></th>
+            <th data-col="loanNumber">Loan # <span class="sort-icon">↕</span></th>
+            <th data-col="principal">Principal <span class="sort-icon">↕</span></th>
+            <th data-col="currentBalance">Balance <span class="sort-icon">↕</span></th>
+            <th data-col="terms">Terms <span class="sort-icon">↕</span></th>
+            <th data-col="numMonths">Months <span class="sort-icon">↕</span></th>
+            <th data-col="numPayments">Payments <span class="sort-icon">↕</span></th>
+            <th data-col="interestRate">Rate <span class="sort-icon">↕</span></th>
+            <th data-col="disbursementDate">Disbursed <span class="sort-icon">↕</span></th>
+            <th data-col="status">Status <span class="sort-icon">↕</span></th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="loansTbody">
+          <tr><td colspan="11">
+            <div class="empty-state">
+              <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+              <div class="empty-title">Loading loans…</div>
+            </div>
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination" id="paginationBar"></div>
+  </div>
+
+</div>
+</main>
+
+<!-- EDIT LOAN MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Edit Loan</h2>
+      <button class="modal-close" data-close="editModal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <!-- Read-only info -->
+        <div class="form-group">
+          <label class="form-label">Borrower</label>
+          <input class="form-input" id="editBorrowerName" disabled/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Loan Number</label>
+          <input class="form-input" id="editLoanNumber" disabled/>
+        </div>
+
+        <hr class="section-divider"/>
+        <span class="section-mini-label">Loan Details (Editable)</span>
+
+        <div class="form-group">
+          <label class="form-label">Principal (₱) <span>*</span></label>
+          <input class="form-input" type="number" id="editPrincipal" min="0" step="0.01"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Interest Rate (%) <span>*</span></label>
+          <input class="form-input" type="number" id="editRate" min="0" step="0.01"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Terms <span>*</span></label>
+          <select class="form-select" id="editTerms">
+            <option value="Monthly">Monthly</option>
+            <option value="Semi Monthly">Semi Monthly</option>
+            <option value="Weekly">Weekly</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. of Months</label>
+          <input class="form-input" type="number" id="editMonths" min="0.5" step="0.5"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. of Payments</label>
+          <input class="form-input" type="number" id="editNumPayments" min="1" step="1"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Purpose</label>
+          <select class="form-select" id="editPurpose">
+            <option>Business</option><option>Education</option><option>Emergency</option>
+            <option>Medical</option><option>Personal</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">First Payment Date</label>
+          <input class="form-input" type="date" id="editFirstPayment"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Disbursement Date</label>
+          <input class="form-input" type="date" id="editDisbursement"/>
+        </div>
+
+        <hr class="section-divider"/>
+        <span class="section-mini-label">Status</span>
+
+        <div class="form-group span-2">
+          <label class="form-label">Loan Status <span>*</span></label>
+          <select class="form-select" id="editStatus">
+            <option value="active">Active</option>
+            <option value="paid">Paid</option>
+            <option value="past_due">Past Due</option>
+          </select>
+          <span class="form-hint">Changing status to "Paid" will not alter balances — update payments separately.</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close="editModal">Cancel</button>
+      <button class="btn btn-primary" id="saveEditBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Save Changes
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signOut, onAuthStateChanged }
+                          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, getDocs, getDoc, doc, updateDoc }
+                          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig={apiKey:"AIzaSyBjYXRXK2lGBdUiWku1rae7MTpYl3bl0hw",authDomain:"lending-management-app-460f5.firebaseapp.com",projectId:"lending-management-app-460f5",storageBucket:"lending-management-app-460f5.firebasestorage.app",messagingSenderId:"167550754445",appId:"1:167550754445:web:e1548d3b0f52b751ed0cc4"};
+const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+
+/* ── Helpers ── */
+const fmt=n=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP',minimumFractionDigits:2}).format(n||0);
+const fmtShort=n=>{if(Math.abs(n)>=1000000)return'₱'+(n/1000000).toFixed(1)+'M';if(Math.abs(n)>=1000)return'₱'+(n/1000).toFixed(0)+'K';return fmt(n);};
+const fmtDate=d=>{if(!d)return'—';const dt=d.toDate?d.toDate():new Date(d);return dt.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});};
+const toDate=ts=>{if(!ts)return null;if(ts.toDate)return ts.toDate();return new Date(ts);};
+const toInputDate=ts=>{const d=toDate(ts);if(!d)return'';return d.toISOString().split('T')[0];};
+const toast=(msg,type='info',dur=3200)=>{const el=document.createElement('div');el.className=`toast toast-${type}`;el.textContent=msg;document.getElementById('toastContainer').appendChild(el);setTimeout(()=>{el.style.animation='toastOut .3s ease forwards';setTimeout(()=>el.remove(),300);},dur);};
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const PAGE_SIZE=20;
+
+/* ── Auth ── */
+onAuthStateChanged(auth,async user=>{
+  if(!user){window.location.href='login.html';return;}
+  let sess=sessionStorage.getItem('lma_user');
+  if(!sess){const snap=await getDoc(doc(db,'user_roles',user.uid));const role=snap.exists()?snap.data().role:'pending';if(role==='pending'){window.location.href='login.html';return;}sessionStorage.setItem('lma_user',JSON.stringify({uid:user.uid,email:user.email,displayName:user.displayName,photoURL:user.photoURL,role}));}
+  const info=JSON.parse(sessionStorage.getItem('lma_user'));
+  if(info.role==='pending'){window.location.href='login.html';return;}
+  initUI(info);
+  loadData();
+});
+
+function initUI(info){
+  document.getElementById('userName').textContent=info.displayName||'User';
+  document.getElementById('userEmail').textContent=info.email||'';
+  const rb=document.getElementById('roleBadge');rb.textContent=info.role;rb.className=`role-badge ${info.role}`;
+  const av=document.getElementById('userAvatar');if(info.photoURL)av.innerHTML=`<img src="${info.photoURL}" alt=""/>`;else av.textContent=(info.displayName||'U')[0].toUpperCase();
+  if(info.role==='admin')document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
+  window._isAdmin=info.role==='admin';
+}
+const now=new Date();
+document.getElementById('dateWidget').textContent=`${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+document.getElementById('logoutBtn').addEventListener('click',async()=>{await signOut(auth);sessionStorage.removeItem('lma_user');window.location.href='login.html';});
+
+/* ── Theme ── */
+(function(){const root=document.documentElement,sw=document.getElementById('themeSwitch'),sunT=document.getElementById('topIconSun'),moonT=document.getElementById('topIconMoon');
+function apply(t){root.setAttribute('data-theme',t);localStorage.setItem('lma_theme',t);sw.classList.toggle('on',t==='dark');if(sunT){sunT.style.display=t==='dark'?'none':'';moonT.style.display=t==='dark'?'':'none';}}
+apply(localStorage.getItem('lma_theme')||'light');
+sw.addEventListener('click',()=>apply(root.getAttribute('data-theme')==='dark'?'light':'dark'));
+document.getElementById('menuThemeBtn')?.addEventListener('click',()=>apply(root.getAttribute('data-theme')==='dark'?'light':'dark'));})();
+
+/* ── Sidebar ── */
+const sidebar=document.getElementById('sidebar'),overlay=document.getElementById('sidebarOverlay');
+document.getElementById('menuBtn')?.addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('show');});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('show');});
+
+/* ── Modal ── */
+document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',()=>document.getElementById(btn.dataset.close).classList.remove('open')));
+document.querySelectorAll('.modal-overlay').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open');}));
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let allLoans=[], allBorrowers=[], allPayments=[];
+let filtered=[], currentPage=1;
+let sortCol='startDate', sortDir='desc';
+let editingLoan=null;
+
+async function loadData(){
+  try{
+    const [lSnap,bSnap,pSnap]=await Promise.all([
+      getDocs(collection(db,'loans')),
+      getDocs(collection(db,'borrowers')),
+      getDocs(collection(db,'payments'))
+    ]);
+    allLoans=lSnap.docs.map(d=>({id:d.id,...d.data()}));
+    allBorrowers=bSnap.docs.map(d=>({id:d.id,...d.data()}));
+    allPayments=pSnap.docs.map(d=>({id:d.id,...d.data()}));
+    computeStats();
+    applyFilters();
+  }catch(err){toast('Error loading data: '+err.message,'error');}
+}
+
+/* ── Stats ── */
+function computeStats(){
+  const active=allLoans.filter(l=>l.status==='active');
+  const totalPrin=allLoans.reduce((s,l)=>s+(l.principal||0),0);
+  const paidCount=allLoans.filter(l=>l.status==='paid').length;
+  document.getElementById('activeCount').textContent=active.length;
+  document.getElementById('activeSub').textContent=`${paidCount} paid · ${allLoans.length} total`;
+  document.getElementById('totalPrincipal').textContent=fmt(totalPrin);
+  document.getElementById('principalSub').textContent=`across all ${allLoans.length} loans`;
+}
+
+/* ── Filters ── */
+['searchInput','filterStatus','filterTerms'].forEach(id=>{
+  const el=document.getElementById(id);
+  el.addEventListener('input',()=>{currentPage=1;applyFilters();});
+  el.addEventListener('change',()=>{currentPage=1;applyFilters();});
+});
+
+function applyFilters(){
+  const search=document.getElementById('searchInput').value.toLowerCase().trim();
+  const status=document.getElementById('filterStatus').value;
+  const terms=document.getElementById('filterTerms').value;
+  const borrowerMap=Object.fromEntries(allBorrowers.map(b=>[b.id,b]));
+
+  filtered=allLoans.filter(l=>{
+    const b=borrowerMap[l.borrowerId]||{};
+    const name=`${b.firstName||''} ${b.lastName||''}`.toLowerCase();
+    const lnum=(l.loanNumber||l.id||'').toLowerCase();
+    const purpose=(l.purpose||'').toLowerCase();
+    if(search&&!name.includes(search)&&!lnum.includes(search)&&!purpose.includes(search)) return false;
+    if(status!=='all'&&l.status!==status) return false;
+    if(terms!=='all'&&l.terms!==terms) return false;
+    return true;
+  });
+
+  // Sort
+  const borrowerMap2=Object.fromEntries(allBorrowers.map(b=>[b.id,b]));
+  filtered.sort((a,b)=>{
+    let va,vb;
+    if(sortCol==='borrower'){
+      const ba=borrowerMap2[a.borrowerId]||{},bb=borrowerMap2[b.borrowerId]||{};
+      va=`${ba.firstName||''} ${ba.lastName||''}`;
+      vb=`${bb.firstName||''} ${bb.lastName||''}`;
+      return sortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
+    }
+    if(sortCol==='loanNumber'){va=a.loanNumber||'';vb=b.loanNumber||'';return sortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);}
+    if(sortCol==='terms'){va=a.terms||'';vb=b.terms||'';return sortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);}
+    if(sortCol==='status'){va=a.status||'';vb=b.status||'';return sortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);}
+    if(sortCol==='disbursementDate'||sortCol==='startDate'){
+      va=toDate(a.disbursementDate||a.startDate)||new Date(0);
+      vb=toDate(b.disbursementDate||b.startDate)||new Date(0);
+      return sortDir==='asc'?va-vb:vb-va;
+    }
+    va=a[sortCol]||0;vb=b[sortCol]||0;
+    return sortDir==='asc'?va-vb:vb-va;
+  });
+
+  document.getElementById('resultCount').textContent=`${filtered.length} record${filtered.length!==1?'s':''}`;
+  renderTable();
+}
+
+/* ── Sort headers ── */
+document.querySelectorAll('th[data-col]').forEach(th=>{
+  th.addEventListener('click',()=>{
+    const col=th.dataset.col;
+    if(sortCol===col) sortDir=sortDir==='asc'?'desc':'asc';
+    else{sortCol=col;sortDir=['disbursementDate','startDate'].includes(col)?'desc':'asc';}
+    document.querySelectorAll('th[data-col]').forEach(t=>t.classList.remove('sorted'));
+    th.classList.add('sorted');
+    th.querySelector('.sort-icon').textContent=sortDir==='asc'?'↑':'↓';
+    applyFilters();
+  });
+});
+
+/* ── Render table ── */
+function renderTable(){
+  const borrowerMap=Object.fromEntries(allBorrowers.map(b=>[b.id,b]));
+  const tbody=document.getElementById('loansTbody');
+  const start=(currentPage-1)*PAGE_SIZE, end=start+PAGE_SIZE;
+  const page=filtered.slice(start,end);
+
+  if(!page.length){
+    tbody.innerHTML=`<tr><td colspan="11"><div class="empty-state">
+      <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+      <div class="empty-title">No loans found</div>
+      <div class="empty-body">Try adjusting your filters.</div>
+    </div></td></tr>`;
+    renderPagination(0); return;
+  }
+
+  // Build payment count map
+  const pmtCountMap={};
+  allPayments.forEach(p=>{pmtCountMap[p.loanId]=(pmtCountMap[p.loanId]||0)+1;});
+
+  tbody.innerHTML=page.map((l,i)=>{
+    const b=borrowerMap[l.borrowerId]||{};
+    const name=b.firstName?`${b.firstName} ${b.lastName}`:'—';
+    const paidCount=pmtCountMap[l.id]||0;
+    const pillClass=l.status==='paid'?'pill-paid':l.status==='past_due'?'pill-past':'pill-active';
+    const pillLabel=l.status==='paid'?'Paid':l.status==='past_due'?'Past Due':'Active';
+    const editBtn=window._isAdmin
+      ?`<button class="btn-edit" data-loanid="${l.id}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit
+        </button>` : '—';
+
+    const balClass=l.status==='paid'?'td-green':l.currentBalance>l.principal*0.7?'td-red':'td-purple';
+
+    return `<tr style="animation:fadeUp .22s ${i*.02}s both;">
+      <td>
+        <div class="td-name">${name}</div>
+        <div class="td-sub">${b.clientNumber||''}</div>
+      </td>
+      <td class="td-mono">${l.loanNumber||l.id}</td>
+      <td class="td-num">${fmt(l.principal)}</td>
+      <td class="td-num ${balClass}">${fmt(l.currentBalance)}</td>
+      <td>${l.terms||'—'}</td>
+      <td style="text-align:center;">${l.numMonths||'—'}</td>
+      <td style="text-align:center;">
+        <span class="payments-badge">${paidCount}/${l.numPayments||'?'}</span>
+      </td>
+      <td style="text-align:center;">${l.interestRate||0}%</td>
+      <td style="font-size:.75rem;">${fmtDate(l.disbursementDate||l.startDate)}</td>
+      <td><span class="status-pill ${pillClass}">${pillLabel}</span></td>
+      <td>${editBtn}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('tableSubtitle').textContent=`Showing ${start+1}–${Math.min(end,filtered.length)} of ${filtered.length}`;
+
+  document.querySelectorAll('.btn-edit[data-loanid]').forEach(btn=>{
+    btn.addEventListener('click',()=>openEditModal(btn.dataset.loanid));
+  });
+
+  renderPagination(filtered.length);
+}
+
+/* ── Pagination ── */
+function renderPagination(total){
+  const bar=document.getElementById('paginationBar');
+  const pages=Math.ceil(total/PAGE_SIZE);
+  if(pages<=1){bar.innerHTML='';return;}
+  let btns=`<button class="pag-btn" id="pagPrev" ${currentPage===1?'disabled':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>`;
+  const s=Math.max(1,currentPage-2),e=Math.min(pages,currentPage+2);
+  if(s>1) btns+=`<button class="pag-btn" data-page="1">1</button>${s>2?'<span style="padding:0 .25rem;color:var(--text3);">…</span>':''}`;
+  for(let p=s;p<=e;p++) btns+=`<button class="pag-btn ${p===currentPage?'active':''}" data-page="${p}">${p}</button>`;
+  if(e<pages) btns+=`${e<pages-1?'<span style="padding:0 .25rem;color:var(--text3);">…</span>':''}<button class="pag-btn" data-page="${pages}">${pages}</button>`;
+  btns+=`<button class="pag-btn" id="pagNext" ${currentPage===pages?'disabled':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>`;
+  bar.innerHTML=`<span class="pag-info">Page ${currentPage} of ${pages}</span><div class="pag-controls">${btns}</div>`;
+  bar.querySelectorAll('[data-page]').forEach(btn=>btn.addEventListener('click',()=>{currentPage=parseInt(btn.dataset.page);renderTable();}));
+  bar.querySelector('#pagPrev')?.addEventListener('click',()=>{if(currentPage>1){currentPage--;renderTable();}});
+  bar.querySelector('#pagNext')?.addEventListener('click',()=>{if(currentPage<pages){currentPage++;renderTable();}});
+}
+
+/* ══════════════════════════════════════════
+   EDIT LOAN MODAL
+══════════════════════════════════════════ */
+function openEditModal(loanId){
+  const l=allLoans.find(x=>x.id===loanId);
+  if(!l)return;
+  editingLoan={...l};
+  const b=allBorrowers.find(x=>x.id===l.borrowerId)||{};
+
+  document.getElementById('editBorrowerName').value=b.firstName?`${b.firstName} ${b.lastName} (${b.clientNumber||''})`:'—';
+  document.getElementById('editLoanNumber').value=l.loanNumber||l.id;
+  document.getElementById('editPrincipal').value=l.principal||0;
+  document.getElementById('editRate').value=l.interestRate||0;
+  document.getElementById('editTerms').value=l.terms||'Monthly';
+  document.getElementById('editMonths').value=l.numMonths||0;
+  document.getElementById('editNumPayments').value=l.numPayments||0;
+  document.getElementById('editFirstPayment').value=toInputDate(l.firstPaymentDate);
+  document.getElementById('editDisbursement').value=toInputDate(l.disbursementDate||l.startDate);
+  document.getElementById('editStatus').value=l.status||'active';
+
+  // Set purpose
+  const purposeSel=document.getElementById('editPurpose');
+  const purposes=['Business','Education','Emergency','Medical','Personal','Other'];
+  if(l.purpose&&!purposes.includes(l.purpose)){
+    const opt=document.createElement('option');opt.value=l.purpose;opt.textContent=l.purpose;
+    purposeSel.appendChild(opt);
+  }
+  purposeSel.value=l.purpose||'Personal';
+
+  document.getElementById('editModal').classList.add('open');
+}
+
+document.getElementById('saveEditBtn').addEventListener('click',async()=>{
+  if(!editingLoan)return;
+  const principal=parseFloat(document.getElementById('editPrincipal').value)||0;
+  const interestRate=parseFloat(document.getElementById('editRate').value)||0;
+  const terms=document.getElementById('editTerms').value;
+  const numMonths=parseFloat(document.getElementById('editMonths').value)||0;
+  const numPayments=parseInt(document.getElementById('editNumPayments').value)||0;
+  const purpose=document.getElementById('editPurpose').value;
+  const firstPaymentDate=document.getElementById('editFirstPayment').value;
+  const disbursementDate=document.getElementById('editDisbursement').value;
+  const status=document.getElementById('editStatus').value;
+
+  if(!principal||!interestRate||!terms||!status){toast('Fill in all required fields.','error');return;}
+
+  const btn=document.getElementById('saveEditBtn');
+  btn.disabled=true;btn.textContent='Saving…';
+  try{
+    await updateDoc(doc(db,'loans',editingLoan.id),{
+      principal,interestRate,terms,numMonths,numPayments,
+      purpose,firstPaymentDate,disbursementDate,status
+    });
+    // Update local cache
+    allLoans=allLoans.map(l=>l.id===editingLoan.id
+      ?{...l,principal,interestRate,terms,numMonths,numPayments,purpose,firstPaymentDate,disbursementDate,status}
+      :l);
+    computeStats();
+    applyFilters();
+    document.getElementById('editModal').classList.remove('open');
+    toast('Loan updated successfully!','success');
+  }catch(err){toast('Error: '+err.message,'error');}
+  finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Save Changes';}
+});
+</script>
+<script>(function(){const t=localStorage.getItem('lma_theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+</body>
+</html>

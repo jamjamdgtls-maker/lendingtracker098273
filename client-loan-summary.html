@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Client Loan Summary — Lending Management App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════ */
+:root{
+  --bg:#f4f6fb;--surface:#ffffff;--card:#eef0f5;
+  --primary:#6c3dcc;--primary-h:#5a2fb5;--primary-g:#8b5cf6;
+  --accent:#22c55e;--warn:#eab308;--danger:#ef4444;--muted:#e8eaee;
+  --text:#1a1a2e;--text2:#4b5280;--text3:#8892b0;
+  --border:rgba(108,61,204,.13);--glow:rgba(108,61,204,.15);
+  --sidebar-w:260px;--topbar-h:60px;
+  --r:1rem;--rs:.6rem;
+  --tr:.22s cubic-bezier(.4,0,.2,1);
+  --shadow:0 2px 16px rgba(108,61,204,.08),0 1px 3px rgba(0,0,0,.04);
+  --shadow-md:0 4px 28px rgba(108,61,204,.12),0 2px 6px rgba(0,0,0,.06);
+  --font-d:'Syne',sans-serif;--font-b:'Instrument Sans',sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#13111f;--surface:#1e1b30;--card:#272b3d;
+  --primary:#7c4dff;--primary-h:#6e3fef;--primary-g:#a78bfa;
+  --muted:#2e3350;--text:#f0edff;--text2:#a8b0d0;--text3:#6070a0;
+  --border:rgba(124,77,255,.18);--glow:rgba(124,77,255,.2);
+  --shadow:0 2px 16px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.2);
+  --shadow-md:0 4px 28px rgba(0,0,0,.42),0 2px 6px rgba(0,0,0,.25);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;}
+body{font-family:var(--font-b);background:var(--bg);color:var(--text);
+  min-height:100dvh;display:flex;overflow-x:hidden;
+  transition:background var(--tr),color var(--tr);}
+button{font-family:var(--font-b);cursor:pointer;border:none;background:none;}
+a{text-decoration:none;color:inherit;}
+input,select{font-family:var(--font-b);}
+
+/* ─── SIDEBAR (shared) ─── */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+  height:100dvh;position:fixed;left:0;top:0;z-index:200;
+  transition:transform var(--tr),background var(--tr);overflow:hidden;}
+.sidebar-header{padding:1.25rem 1.1rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sidebar-logo{display:flex;align-items:center;gap:.65rem;}
+.sidebar-logo-icon{width:2.1rem;height:2.1rem;border-radius:.55rem;
+  background:linear-gradient(135deg,var(--primary),var(--primary-g));
+  display:grid;place-items:center;flex-shrink:0;}
+.sidebar-logo-icon svg{width:1.1rem;height:1.1rem;color:#fff;}
+.sidebar-logo-title{font-family:var(--font-d);font-weight:800;font-size:.78rem;line-height:1.15;color:var(--text);}
+.sidebar-logo-sub{font-size:.62rem;color:var(--text3);font-weight:500;letter-spacing:.05em;margin-top:.1rem;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:.75rem .6rem;display:flex;flex-direction:column;gap:.15rem;}
+.sidebar-nav::-webkit-scrollbar{width:3px;}
+.sidebar-nav::-webkit-scrollbar-thumb{background:var(--muted);border-radius:10px;}
+.nav-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text3);padding:.5rem .65rem .25rem;margin-top:.35rem;}
+.nav-item{display:flex;align-items:center;gap:.6rem;padding:.55rem .7rem;border-radius:var(--rs);
+  color:var(--text2);font-size:.82rem;font-weight:500;transition:var(--tr);}
+.nav-item:hover{background:var(--muted);color:var(--text);}
+.nav-item.active{background:var(--primary);color:#fff;}
+.nav-item svg{width:1rem;height:1rem;flex-shrink:0;color:var(--text3);transition:var(--tr);}
+.nav-item:hover svg,.nav-item.active svg{color:currentColor;}
+.nav-item.sub{padding-left:1.9rem;font-size:.78rem;}
+.nav-item .badge-admin{margin-left:auto;font-size:.55rem;font-weight:700;
+  background:var(--primary);color:#fff;padding:.1rem .35rem;border-radius:100px;}
+.sidebar-footer{padding:.75rem .6rem;border-top:1px solid var(--border);
+  display:flex;flex-direction:column;gap:.5rem;flex-shrink:0;}
+.theme-row{display:flex;align-items:center;justify-content:space-between;padding:.35rem .5rem;}
+.theme-label{font-size:.75rem;color:var(--text2);font-weight:500;display:flex;align-items:center;gap:.4rem;}
+.theme-label svg{width:.9rem;height:.9rem;}
+.theme-switch{width:2.4rem;height:1.3rem;border-radius:100px;background:var(--muted);
+  border:1.5px solid var(--border);position:relative;transition:var(--tr);cursor:pointer;}
+.theme-switch.on{background:var(--primary);border-color:var(--primary);}
+.theme-switch::after{content:'';position:absolute;top:2px;left:2px;
+  width:calc(1.3rem - 8px);height:calc(1.3rem - 8px);background:#fff;border-radius:50%;transition:var(--tr);}
+.theme-switch.on::after{transform:translateX(1.1rem);}
+.date-widget{padding:.4rem .5rem;background:var(--card);border-radius:var(--rs);
+  font-size:.72rem;color:var(--text2);text-align:center;font-weight:500;}
+.user-row{display:flex;align-items:center;gap:.55rem;padding:.35rem .5rem;}
+.user-avatar{width:1.8rem;height:1.8rem;border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--primary-g));
+  display:grid;place-items:center;font-size:.7rem;font-weight:700;color:#fff;
+  flex-shrink:0;overflow:hidden;}
+.user-avatar img{width:100%;height:100%;object-fit:cover;}
+.user-name{font-size:.75rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-email{font-size:.62rem;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.role-badge{font-size:.55rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  padding:.15rem .4rem;border-radius:100px;flex-shrink:0;}
+.role-badge.admin{background:rgba(108,61,204,.15);color:var(--primary);}
+.role-badge.user{background:var(--muted);color:var(--text2);}
+.btn-logout{display:flex;align-items:center;justify-content:center;gap:.45rem;padding:.45rem;
+  border-radius:var(--rs);color:var(--danger);font-size:.78rem;font-weight:600;transition:var(--tr);}
+.btn-logout:hover{background:rgba(239,68,68,.08);}
+.btn-logout svg{width:.85rem;height:.85rem;}
+.sidebar-overlay{display:none;position:fixed;inset:0;z-index:199;
+  background:rgba(0,0,0,.45);backdrop-filter:blur(2px);opacity:0;transition:opacity var(--tr);}
+.sidebar-overlay.show{opacity:1;}
+
+/* ─── TOPBAR ─── */
+.topbar{display:none;height:var(--topbar-h);background:var(--surface);
+  border-bottom:1px solid var(--border);align-items:center;gap:.75rem;padding:0 1rem;
+  position:fixed;top:0;left:0;right:0;z-index:180;}
+.topbar-title{font-family:var(--font-d);font-weight:800;font-size:.85rem;flex:1;}
+.btn-menu{width:2.2rem;height:2.2rem;border-radius:var(--rs);background:var(--card);
+  display:grid;place-items:center;transition:var(--tr);}
+.btn-menu:hover{background:var(--muted);}
+.btn-menu svg{width:1.1rem;height:1.1rem;}
+
+/* ─── MAIN ─── */
+.main{margin-left:var(--sidebar-w);flex:1;min-width:0;display:flex;flex-direction:column;}
+.main-inner{padding:1.75rem 1.75rem 3rem;flex:1;}
+
+/* ─── PAGE HEADER ─── */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;
+  gap:1rem;margin-bottom:1.75rem;flex-wrap:wrap;align-items:center;}
+.page-title{font-family:var(--font-d);font-weight:800;font-size:1.5rem;color:var(--text);}
+.page-subtitle{font-size:.8rem;color:var(--text3);margin-top:.25rem;font-weight:500;}
+
+/* ─── SELECTION CARD ─── */
+.select-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:1.35rem 1.5rem;box-shadow:var(--shadow);margin-bottom:1.5rem;
+  animation:fadeUp .5s cubic-bezier(.34,1.26,.64,1) both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+.select-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.select-group{display:flex;flex-direction:column;gap:.35rem;}
+.select-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);}
+.select-input{
+  padding:.6rem .9rem;border-radius:var(--rs);
+  border:1.5px solid var(--border);background:var(--card);color:var(--text);
+  font-size:.85rem;font-family:var(--font-b);transition:var(--tr);width:100%;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238892b0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .75rem center;padding-right:2.2rem;
+}
+.select-input:focus{outline:none;border-color:var(--primary);
+  box-shadow:0 0 0 3px var(--glow);background:var(--surface);}
+.select-input:disabled{opacity:.5;cursor:not-allowed;}
+
+/* ─── INFO CARDS ─── */
+.info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-bottom:1.5rem;}
+.info-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:1.1rem 1.15rem;box-shadow:var(--shadow);transition:var(--tr);
+  animation:fadeUp .5s cubic-bezier(.34,1.26,.64,1) both;
+  position:relative;overflow:hidden;
+}
+.info-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0;}
+.ic-p::before{background:linear-gradient(90deg,var(--primary),var(--primary-g));}
+.ic-r::before{background:linear-gradient(90deg,#22c55e,#86efac);}
+.ic-b::before{background:linear-gradient(90deg,#ef4444,#fca5a5);}
+.ic-o::before{background:linear-gradient(90deg,#eab308,#fde047);}
+.info-card:nth-child(1){animation-delay:.05s;}
+.info-card:nth-child(2){animation-delay:.1s;}
+.info-card:nth-child(3){animation-delay:.15s;}
+.info-card:nth-child(4){animation-delay:.2s;}
+.info-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.ic-label{font-size:.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:.4rem;}
+.ic-value{font-family:var(--font-d);font-weight:800;font-size:1.15rem;color:var(--text);line-height:1.1;}
+.ic-sub{font-size:.68rem;color:var(--text3);margin-top:.25rem;}
+
+/* ─── TOTAL PAID BIG ─── */
+.total-paid-banner{
+  background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(34,197,94,.03));
+  border:1px solid rgba(34,197,94,.2);border-radius:var(--r);
+  padding:1.25rem 1.5rem;margin-bottom:1.5rem;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;
+  animation:fadeUp .5s .25s both;
+}
+.tpb-left{display:flex;align-items:center;gap:1rem;}
+.tpb-icon{width:2.75rem;height:2.75rem;border-radius:.75rem;
+  background:rgba(34,197,94,.15);display:grid;place-items:center;}
+.tpb-icon svg{width:1.35rem;height:1.35rem;color:#22c55e;}
+.tpb-label{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);}
+.tpb-value{font-family:var(--font-d);font-weight:800;font-size:1.85rem;color:#22c55e;line-height:1.1;}
+.tpb-sub{font-size:.75rem;color:var(--text3);margin-top:.2rem;}
+
+/* ─── SECTION TITLE ─── */
+.section-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:.75rem;margin-bottom:1rem;
+}
+.section-title{font-family:var(--font-d);font-weight:700;font-size:.95rem;color:var(--text);
+  display:flex;align-items:center;gap:.5rem;}
+.section-title::after{content:'';display:block;height:1px;width:2rem;background:var(--border);}
+
+/* ─── BUTTONS ─── */
+.btn{display:inline-flex;align-items:center;gap:.45rem;padding:.55rem 1.1rem;
+  border-radius:var(--rs);font-size:.82rem;font-weight:600;transition:var(--tr);white-space:nowrap;}
+.btn svg{width:.9rem;height:.9rem;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-h);box-shadow:0 4px 16px var(--glow);transform:translateY(-1px);}
+.btn-ghost{background:var(--card);color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--muted);}
+.btn-sm{padding:.38rem .8rem;font-size:.75rem;}
+.btn-success{background:#22c55e;color:#fff;}
+.btn-success:hover{background:#16a34a;transform:translateY(-1px);}
+.btn-report{
+  background:linear-gradient(135deg,var(--primary),var(--primary-g));
+  color:#fff;box-shadow:0 4px 16px var(--glow);
+}
+.btn-report:hover{box-shadow:0 6px 24px var(--glow);transform:translateY(-2px);}
+.btn-report:active{transform:translateY(0);}
+.btn-report:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+/* ─── PAYMENT HISTORY TABLE ─── */
+.table-wrap{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  box-shadow:var(--shadow);overflow:hidden;animation:fadeUp .5s .3s both;
+}
+.table-head{padding:.85rem 1.35rem;
+  background:linear-gradient(90deg,var(--primary),var(--primary-g));
+  display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;}
+.th-title{font-family:var(--font-d);font-weight:700;font-size:.9rem;color:#fff;}
+.th-sub{font-size:.7rem;color:rgba(255,255,255,.72);}
+.table-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:680px;}
+th{font-size:.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--text3);padding:.65rem 1.1rem;text-align:right;border-bottom:1px solid var(--border);}
+th:first-child{text-align:left;}
+td{font-size:.8rem;padding:.7rem 1.1rem;border-bottom:1px solid var(--border);
+  color:var(--text2);text-align:right;vertical-align:middle;}
+td:first-child{text-align:left;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--card);}
+tr.paid-row td{background:rgba(34,197,94,.03);}
+tr.projected-row td{background:rgba(108,61,204,.03);}
+tr.projected-row td{color:var(--text3);}
+.td-num{font-family:monospace;font-size:.75rem;color:var(--text3);}
+.td-bal{font-weight:600;font-family:var(--font-d);}
+.td-green{color:#22c55e;}
+.td-red{color:var(--danger);}
+.td-purple{color:var(--primary);}
+.td-amber{color:#d97706;}
+.td-date{font-size:.76rem;}
+.paid-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.15rem .55rem;
+  border-radius:100px;background:rgba(34,197,94,.1);color:#22c55e;
+  font-size:.65rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+.proj-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.15rem .55rem;
+  border-radius:100px;background:rgba(108,61,204,.1);color:var(--primary);
+  font-size:.65rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+
+/* ─── PLACEHOLDER ─── */
+.placeholder{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:3.5rem 1rem;text-align:center;box-shadow:var(--shadow);
+}
+.placeholder-icon{width:4.5rem;height:4.5rem;border-radius:50%;
+  background:rgba(108,61,204,.08);border:2px solid rgba(108,61,204,.15);
+  display:grid;place-items:center;margin:0 auto 1rem;}
+.placeholder-icon svg{width:2rem;height:2rem;color:var(--primary);opacity:.6;}
+.placeholder h3{font-family:var(--font-d);font-weight:700;font-size:1rem;color:var(--text);margin-bottom:.4rem;}
+.placeholder p{font-size:.82rem;color:var(--text3);}
+
+/* ─── SKELETON ─── */
+.skel{background:linear-gradient(90deg,var(--muted) 25%,var(--card) 50%,var(--muted) 75%);
+  background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:.4rem;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+/* ─── TOAST ─── */
+.toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;
+  display:flex;flex-direction:column;gap:.5rem;pointer-events:none;}
+.toast{padding:.65rem 1.1rem;border-radius:var(--rs);font-size:.8rem;font-weight:600;
+  color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.25);animation:toastIn .3s ease both;
+  pointer-events:auto;max-width:300px;}
+.toast-success{background:#22c55e;}
+.toast-error{background:var(--danger);}
+.toast-info{background:var(--primary);}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px) scale(.92);}to{opacity:1;transform:none;}}
+@keyframes toastOut{from{opacity:1;}to{opacity:0;transform:translateY(8px) scale(.92);}}
+
+/* ─── LOADING OVERLAY ─── */
+.loading-overlay{
+  position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.6);
+  backdrop-filter:blur(4px);display:grid;place-items:center;
+  opacity:0;pointer-events:none;transition:opacity var(--tr);
+}
+.loading-overlay.show{opacity:1;pointer-events:all;}
+.loading-box{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:2rem 2.5rem;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.3);
+  min-width:240px;
+}
+.loading-spinner{width:2.5rem;height:2.5rem;border:3px solid var(--muted);
+  border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;
+  margin:0 auto .85rem;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{font-weight:600;color:var(--text);font-size:.88rem;}
+.loading-sub{font-size:.75rem;color:var(--text3);margin-top:.25rem;}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:1100px){.info-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:900px){.select-grid{grid-template-columns:1fr;}}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay{display:block;}
+  .topbar{display:flex;}
+  .main{margin-left:0;padding-top:var(--topbar-h);}
+  .main-inner{padding:1.25rem 1rem 3rem;}
+  .info-grid{grid-template-columns:1fr 1fr;}
+  .page-header{flex-direction:column;align-items:flex-start;}
+}
+@media(max-width:480px){.info-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <div>
+        <div class="sidebar-logo-title">LENDING MANAGEMENT</div>
+        <div class="sidebar-logo-sub">Loan Management System</div>
+      </div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <span class="nav-label">Overview</span>
+    <a class="nav-item" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard Summary</a>
+    <a class="nav-item sub" href="monthly-profit.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Monthly Profit</a>
+    <a class="nav-item sub" href="past-due.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Past Due</a>
+    <a class="nav-item sub" href="cash-flow.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Cash Flow</a>
+    <span class="nav-label">Clients & Loans</span>
+    <a class="nav-item active" href="client-loan-summary.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Client Loan Summary</a>
+    <a class="nav-item" href="loan-schedule.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Loan Schedule</a>
+    <a class="nav-item" href="payment-data.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payment Data</a>
+    <a class="nav-item" href="loan-data.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Loan Data</a>
+    <a class="nav-item" href="client-list.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Client List</a>
+    <span class="nav-label">Settings</span>
+    <a class="nav-item" href="setup.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Setup</a>
+    <a class="nav-item admin-only" href="user-management.html" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>User Management<span class="badge-admin">ADMIN</span></a>
+    <a class="nav-item admin-only" href="list-management.html" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>List Management<span class="badge-admin">ADMIN</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="theme-row">
+      <span class="theme-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Dark Mode
+      </span>
+      <div class="theme-switch" id="themeSwitch"></div>
+    </div>
+    <div class="date-widget" id="dateWidget">—</div>
+    <div class="user-row">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div style="flex:1;min-width:0;">
+        <div class="user-name" id="userName">Loading…</div>
+        <div class="user-email" id="userEmail"></div>
+      </div>
+      <span class="role-badge" id="roleBadge">—</span>
+    </div>
+    <button class="btn-logout" id="logoutBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out
+    </button>
+  </div>
+</aside>
+
+<!-- Mobile Topbar -->
+<div class="topbar" id="topbar">
+  <button class="btn-menu" id="menuBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <span class="topbar-title">Client Loan Summary</span>
+  <button class="btn-menu" id="menuThemeBtn">
+    <svg id="topIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg id="topIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+  <div class="main-inner">
+
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Client Loan Summary</h1>
+        <p class="page-subtitle">View detailed loan info and generate printable A4 reports</p>
+      </div>
+      <button class="btn btn-report" id="generateReportBtn" style="display:none;" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Generate A4 Report
+      </button>
+    </div>
+
+    <!-- Selection -->
+    <div class="select-card">
+      <div class="select-grid">
+        <div class="select-group">
+          <label class="select-label" for="clientSelect">Select Client</label>
+          <select class="select-input" id="clientSelect">
+            <option value="">— Loading clients… —</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label class="select-label" for="loanSelect">Select Loan</label>
+          <select class="select-input" id="loanSelect" disabled>
+            <option value="">— Select a client first —</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Cards (hidden until loan selected) -->
+    <div class="info-grid" id="infoGrid" style="display:none;">
+      <div class="info-card ic-p">
+        <div class="ic-label">Principal Amount</div>
+        <div class="ic-value" id="icPrincipal">—</div>
+        <div class="ic-sub">Original loan amount</div>
+      </div>
+      <div class="info-card ic-r">
+        <div class="ic-label">Interest Rate</div>
+        <div class="ic-value" id="icRate">—</div>
+        <div class="ic-sub">Per payment period</div>
+      </div>
+      <div class="info-card ic-b">
+        <div class="ic-label">Current Balance</div>
+        <div class="ic-value" id="icBalance">—</div>
+        <div class="ic-sub" id="icBalanceSub">Remaining principal</div>
+      </div>
+      <div class="info-card ic-o">
+        <div class="ic-label">Balance + Interest</div>
+        <div class="ic-value" id="icOutstanding">—</div>
+        <div class="ic-sub">Balance × (1 + rate)</div>
+      </div>
+    </div>
+
+    <!-- Total Paid -->
+    <div class="total-paid-banner" id="totalPaidBanner" style="display:none;">
+      <div class="tpb-left">
+        <div class="tpb-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div>
+          <div class="tpb-label">Total Amount Paid</div>
+          <div class="tpb-value" id="totalPaidValue">₱0.00</div>
+          <div class="tpb-sub" id="totalPaidSub">0 payments recorded</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:.65rem;flex-wrap:wrap;">
+        <span id="loanStatusBadge"></span>
+      </div>
+    </div>
+
+    <!-- Payment History -->
+    <div id="historySection" style="display:none;">
+      <div class="section-hdr">
+        <div class="section-title">Payment History &amp; Schedule</div>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <span style="font-size:.72rem;color:var(--text3);">
+            <span style="display:inline-block;width:.6rem;height:.6rem;border-radius:50%;background:#22c55e;margin-right:.3rem;"></span>Paid
+            <span style="display:inline-block;width:.6rem;height:.6rem;border-radius:50%;background:var(--primary);margin:0 .3rem 0 .75rem;"></span>Projected
+          </span>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <span class="th-title">Amortization Schedule</span>
+          <span class="th-sub" id="scheduleSubtitle">—</span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Balance Before</th>
+                <th>Interest Rate</th>
+                <th>Interest Value</th>
+                <th>Payable</th>
+                <th>Actual Payment</th>
+                <th>Pay Date</th>
+                <th>Actual Balance</th>
+              </tr>
+            </thead>
+            <tbody id="schedTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Placeholder -->
+    <div class="placeholder" id="placeholder">
+      <div class="placeholder-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+      <h3>No Loan Selected</h3>
+      <p>Select a client and loan above to view the summary and schedule.</p>
+    </div>
+
+  </div>
+</main>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-box">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">Generating Report…</div>
+    <div class="loading-sub" id="loadingSub">Building amortization schedule</div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- html2canvas CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<!-- ═══ FIREBASE + LOGIC ═══ -->
+<script type="module">
+import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signOut, onAuthStateChanged }
+                          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, getDocs, getDoc, doc, query, where }
+                          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBjYXRXK2lGBdUiWku1rae7MTpYl3bl0hw",
+  authDomain:"lending-management-app-460f5.firebaseapp.com",
+  projectId:"lending-management-app-460f5",
+  storageBucket:"lending-management-app-460f5.firebasestorage.app",
+  messagingSenderId:"167550754445",
+  appId:"1:167550754445:web:e1548d3b0f52b751ed0cc4"
+};
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+/* ── Helpers ── */
+const fmt = n => new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP',minimumFractionDigits:2}).format(n||0);
+const fmtDate = d => {
+  if(!d) return '—';
+  const dt = d.toDate ? d.toDate() : new Date(d);
+  return dt.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});
+};
+const toDate = ts => {
+  if(!ts) return null; if(ts.toDate) return ts.toDate(); return new Date(ts);
+};
+const toast = (msg,type='info',dur=3200) => {
+  const el=document.createElement('div'); el.className=`toast toast-${type}`; el.textContent=msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(()=>{el.style.animation='toastOut .3s ease forwards';setTimeout(()=>el.remove(),300);},dur);
+};
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+/* ── Auth Guard ── */
+onAuthStateChanged(auth, async user => {
+  if(!user){ window.location.href='login.html'; return; }
+  let sess = sessionStorage.getItem('lma_user');
+  if(!sess){
+    const snap = await getDoc(doc(db,'user_roles',user.uid));
+    const role = snap.exists() ? snap.data().role : 'pending';
+    if(role==='pending'){ window.location.href='login.html'; return; }
+    sessionStorage.setItem('lma_user', JSON.stringify({uid:user.uid,email:user.email,displayName:user.displayName,photoURL:user.photoURL,role}));
+  }
+  const info = JSON.parse(sessionStorage.getItem('lma_user'));
+  if(info.role==='pending'){ window.location.href='login.html'; return; }
+  initUI(info);
+  await loadBorrowers();
+});
+
+/* ── UI ── */
+function initUI(info){
+  document.getElementById('userName').textContent  = info.displayName||'User';
+  document.getElementById('userEmail').textContent = info.email||'';
+  const rb = document.getElementById('roleBadge');
+  rb.textContent=info.role; rb.className=`role-badge ${info.role}`;
+  const av = document.getElementById('userAvatar');
+  if(info.photoURL) av.innerHTML=`<img src="${info.photoURL}" alt=""/>`;
+  else av.textContent=(info.displayName||'U')[0].toUpperCase();
+  if(info.role==='admin') document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
+}
+
+const now = new Date();
+document.getElementById('dateWidget').textContent = `${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+
+document.getElementById('logoutBtn').addEventListener('click',async()=>{
+  await signOut(auth); sessionStorage.removeItem('lma_user'); window.location.href='login.html';
+});
+
+/* ── Theme ── */
+(function(){
+  const root=document.documentElement, sw=document.getElementById('themeSwitch');
+  const sunT=document.getElementById('topIconSun'), moonT=document.getElementById('topIconMoon');
+  function apply(t){
+    root.setAttribute('data-theme',t); localStorage.setItem('lma_theme',t);
+    sw.classList.toggle('on',t==='dark');
+    if(sunT){ sunT.style.display=t==='dark'?'none':''; moonT.style.display=t==='dark'?'':'none'; }
+  }
+  apply(localStorage.getItem('lma_theme')||'light');
+  sw.addEventListener('click',()=>apply(root.getAttribute('data-theme')==='dark'?'light':'dark'));
+  document.getElementById('menuThemeBtn')?.addEventListener('click',()=>
+    apply(root.getAttribute('data-theme')==='dark'?'light':'dark'));
+})();
+
+/* ── Sidebar ── */
+const sidebar=document.getElementById('sidebar'), overlay=document.getElementById('sidebarOverlay');
+document.getElementById('menuBtn')?.addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('show');});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('show');});
+
+/* ══════════════════════════════════════════
+   DATA
+══════════════════════════════════════════ */
+let borrowers=[], allLoans=[], currentLoan=null, currentBorrower=null, loanPayments=[];
+
+async function loadBorrowers(){
+  const snap = await getDocs(collection(db,'borrowers'));
+  borrowers = snap.docs.map(d=>({id:d.id,...d.data()}))
+    .sort((a,b)=>`${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
+  const sel = document.getElementById('clientSelect');
+  sel.innerHTML = '<option value="">— Select client —</option>' +
+    borrowers.map(b=>`<option value="${b.id}">${b.firstName} ${b.lastName} (${b.clientNumber||''})</option>`).join('');
+
+  const snap2 = await getDocs(collection(db,'loans'));
+  allLoans = snap2.docs.map(d=>({id:d.id,...d.data()}));
+}
+
+/* ── Client change ── */
+document.getElementById('clientSelect').addEventListener('change', async function(){
+  currentBorrower = borrowers.find(b=>b.id===this.value)||null;
+  const loanSel = document.getElementById('loanSelect');
+  currentLoan = null; loanPayments = [];
+  clearLoanDisplay();
+
+  if(!currentBorrower){ loanSel.disabled=true; loanSel.innerHTML='<option value="">— Select a client first —</option>'; return; }
+
+  const clientLoans = allLoans.filter(l=>l.borrowerId===currentBorrower.id)
+    .sort((a,b)=>{
+      const da=toDate(a.startDate||a.createdAt), db=toDate(b.startDate||b.createdAt);
+      return (db||0)-(da||0);
+    });
+
+  loanSel.disabled = false;
+  loanSel.innerHTML = '<option value="">— Select loan —</option>' +
+    clientLoans.map(l=>`<option value="${l.id}">${l.loanNumber||l.id} — ${fmt(l.principal)} — ${l.status}</option>`).join('');
+});
+
+/* ── Loan change ── */
+document.getElementById('loanSelect').addEventListener('change', async function(){
+  currentLoan = allLoans.find(l=>l.id===this.value)||null;
+  clearLoanDisplay();
+  if(!currentLoan) return;
+
+  const pSnap = await getDocs(query(collection(db,'payments'),where('loanId','==',currentLoan.id)));
+  loanPayments = pSnap.docs.map(d=>({id:d.id,...d.data()}))
+    .sort((a,b)=>{
+      const da=toDate(a.paymentDate||a.createdAt), db=toDate(b.paymentDate||b.createdAt);
+      return (da||0)-(db||0);
+    });
+
+  renderLoanDisplay();
+});
+
+/* ── Clear display ── */
+function clearLoanDisplay(){
+  document.getElementById('infoGrid').style.display='none';
+  document.getElementById('totalPaidBanner').style.display='none';
+  document.getElementById('historySection').style.display='none';
+  document.getElementById('placeholder').style.display='';
+  document.getElementById('generateReportBtn').style.display='none';
+}
+
+/* ── Render loan display ── */
+function renderLoanDisplay(){
+  if(!currentLoan) return;
+  const l = currentLoan;
+  const bal = l.currentBalance||0;
+  const rate = (l.interestRate||0)/100;
+  const outstanding = bal + bal*rate;
+
+  /* Info cards */
+  document.getElementById('infoGrid').style.display='';
+  document.getElementById('icPrincipal').textContent   = fmt(l.principal);
+  document.getElementById('icRate').textContent        = `${l.interestRate}%`;
+  document.getElementById('icBalance').textContent     = fmt(bal);
+  document.getElementById('icBalanceSub').textContent  = l.status==='paid' ? '✅ Fully paid' : 'Remaining principal';
+  document.getElementById('icOutstanding').textContent = fmt(outstanding);
+
+  /* Total paid */
+  const totalPaid = loanPayments.reduce((s,p)=>s+(p.amountPaid||0),0);
+  document.getElementById('totalPaidBanner').style.display='';
+  document.getElementById('totalPaidValue').textContent = fmt(totalPaid);
+  document.getElementById('totalPaidSub').textContent   = `${loanPayments.length} payment${loanPayments.length!==1?'s':''} recorded`;
+
+  const sb = document.getElementById('loanStatusBadge');
+  sb.innerHTML = l.status==='paid'
+    ? `<span style="padding:.3rem .9rem;border-radius:100px;background:rgba(34,197,94,.12);color:#22c55e;font-size:.78rem;font-weight:700;">✅ Fully Paid</span>`
+    : l.status==='past_due'
+    ? `<span style="padding:.3rem .9rem;border-radius:100px;background:rgba(239,68,68,.12);color:var(--danger);font-size:.78rem;font-weight:700;">⚠️ Past Due</span>`
+    : `<span style="padding:.3rem .9rem;border-radius:100px;background:rgba(108,61,204,.12);color:var(--primary);font-size:.78rem;font-weight:700;">🔵 Active</span>`;
+
+  /* Schedule */
+  document.getElementById('placeholder').style.display='none';
+  document.getElementById('historySection').style.display='';
+  document.getElementById('generateReportBtn').style.display='';
+  document.getElementById('generateReportBtn').disabled=false;
+
+  renderSchedule();
+}
+
+/* ── Amortization schedule (diminishing balance) ── */
+function calcFixedPayment(P,r,n){
+  if(r===0) return P/n;
+  return (P*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+}
+
+function renderSchedule(){
+  const l = currentLoan;
+  const P = l.principal||0;
+  const r = (l.interestRate||0)/100;
+  const n = l.numPayments||l.originalNumPayments||1;
+  const fixedPmt = calcFixedPayment(P,r,n);
+
+  const tbody = document.getElementById('schedTbody');
+  const paidCount = loanPayments.length;
+  document.getElementById('scheduleSubtitle').textContent =
+    `${paidCount} paid · ${Math.max(0,n-paidCount)} remaining · ${n} total`;
+
+  let rows = '';
+  let runBal = P;
+
+  for(let i=0;i<n;i++){
+    const isPaid = i < paidCount;
+    const interest = runBal * r;
+    const payable  = runBal + interest;
+
+    if(isPaid){
+      const p = loanPayments[i];
+      const actualPmt  = p.amountPaid||0;
+      const actualInt  = p.interestValue||0;
+      const balBefore  = p.balanceBefore||runBal;
+      const balAfter   = p.balanceAfter||Math.max(0,balBefore-(actualPmt-actualInt));
+      rows += `<tr class="paid-row">
+        <td class="td-num">${i+1}</td>
+        <td class="td-bal">${fmt(balBefore)}</td>
+        <td style="text-align:right;">${l.interestRate}%</td>
+        <td class="td-bal td-amber">${fmt(actualInt)}</td>
+        <td class="td-bal">${fmt(balBefore+actualInt)}</td>
+        <td class="td-bal td-green">${fmt(actualPmt)}</td>
+        <td class="td-date">${fmtDate(p.paymentDate||p.createdAt)}</td>
+        <td class="td-bal td-red">${fmt(balAfter)}</td>
+      </tr>`;
+      runBal = balAfter;
+    } else {
+      const projInt  = runBal * r;
+      const projPmt  = Math.min(fixedPmt, runBal + projInt);
+      const projBal  = Math.max(0, runBal - (projPmt - projInt));
+      rows += `<tr class="projected-row">
+        <td class="td-num">${i+1}</td>
+        <td class="td-bal">${fmt(runBal)}</td>
+        <td style="text-align:right;">${l.interestRate}%</td>
+        <td class="td-purple">${fmt(projInt)}</td>
+        <td>${fmt(runBal+projInt)}</td>
+        <td><span class="proj-badge">Projected</span></td>
+        <td class="td-date">—</td>
+        <td>${fmt(projBal)}</td>
+      </tr>`;
+      runBal = projBal;
+    }
+  }
+  tbody.innerHTML = rows;
+}
+
+/* ══════════════════════════════════════════
+   A4 REPORT GENERATION
+══════════════════════════════════════════ */
+document.getElementById('generateReportBtn').addEventListener('click', generateReport);
+
+async function generateReport(){
+  const overlay = document.getElementById('loadingOverlay');
+  const loadTxt = document.getElementById('loadingText');
+  const loadSub = document.getElementById('loadingSub');
+
+  overlay.classList.add('show');
+  loadTxt.textContent = 'Building Report…';
+  loadSub.textContent = 'Preparing amortization schedule';
+
+  try {
+    const company = JSON.parse(localStorage.getItem('esl_company_settings')||'{}');
+    const companyName = company.companyName || 'LENDING MANAGEMENT APP';
+    const companyTag  = company.tagline     || 'Loan Management System';
+    const companyAddr = company.address     || '';
+    const companyPhone= company.phone       || '';
+
+    const l = currentLoan;
+    const b = currentBorrower;
+    const P = l.principal||0;
+    const r = (l.interestRate||0)/100;
+    const n = l.numPayments||1;
+    const fixedPmt = calcFixedPayment(P,r,n);
+    const totalPaid = loanPayments.reduce((s,p)=>s+(p.amountPaid||0),0);
+    const bal = l.currentBalance||0;
+
+    // Build schedule rows
+    let schedRows=''; let runBal=P;
+    for(let i=0;i<n;i++){
+      const isPaid = i<loanPayments.length;
+      if(isPaid){
+        const p=loanPayments[i];
+        const balBefore=p.balanceBefore||runBal;
+        const balAfter=p.balanceAfter||0;
+        schedRows+=`<tr style="background:${i%2===0?'#f9fafb':'#fff'};">
+          <td>${i+1}</td><td>${fmt(balBefore)}</td><td>${l.interestRate}%</td>
+          <td style="color:#16a34a;">${fmt(p.interestValue||0)}</td>
+          <td>${fmt(balBefore+(p.interestValue||0))}</td>
+          <td style="color:#16a34a;font-weight:700;">${fmt(p.amountPaid)}</td>
+          <td>${fmtDate(p.paymentDate||p.createdAt)}</td>
+          <td style="color:#dc2626;">${fmt(balAfter)}</td>
+        </tr>`;
+        runBal=balAfter;
+      } else {
+        const projInt=runBal*r;
+        const projPmt=Math.min(fixedPmt,runBal+projInt);
+        const projBal=Math.max(0,runBal-(projPmt-projInt));
+        schedRows+=`<tr style="background:${i%2===0?'#f9fafb':'#fff'};color:#6b7280;">
+          <td>${i+1}</td><td>${fmt(runBal)}</td><td>${l.interestRate}%</td>
+          <td>${fmt(projInt)}</td><td>${fmt(runBal+projInt)}</td>
+          <td><em>Projected</em></td><td>—</td><td>${fmt(projBal)}</td>
+        </tr>`;
+        runBal=projBal;
+      }
+    }
+
+    loadSub.textContent = 'Rendering canvas';
+
+    // Build the A4 HTML
+    const reportHTML = `
+      <div id="a4report" style="width:794px;padding:40px;font-family:'Instrument Sans',sans-serif;font-size:12px;color:#1a1a2e;background:#fff;line-height:1.5;">
+        <!-- Header -->
+        <div style="text-align:center;border-bottom:3px solid #6c3dcc;padding-bottom:16px;margin-bottom:20px;">
+          <div style="font-size:22px;font-weight:800;font-family:'Syne',sans-serif;color:#6c3dcc;letter-spacing:.02em;">${companyName}</div>
+          <div style="font-size:12px;color:#8892b0;margin-top:3px;">${companyTag}</div>
+          ${companyAddr ? `<div style="font-size:11px;color:#8892b0;">${companyAddr}${companyPhone?' · '+companyPhone:''}</div>` : ''}
+          <div style="font-size:16px;font-weight:700;margin-top:10px;color:#1a1a2e;">LOAN STATEMENT</div>
+          <div style="font-size:11px;color:#8892b0;">Generated: ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div>
+        </div>
+
+        <!-- Client + Loan Info -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+          <div style="border:1px solid #e8eaee;border-radius:8px;padding:14px;background:#f9fafb;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#8892b0;margin-bottom:8px;">CLIENT INFORMATION</div>
+            <div style="font-weight:700;font-size:13px;">${b.firstName} ${b.lastName}</div>
+            <div style="color:#4b5280;">Client #: ${b.clientNumber||'—'}</div>
+            <div style="color:#4b5280;">Phone: ${b.phone||'—'}</div>
+            <div style="color:#4b5280;">Company: ${b.company||'—'}</div>
+          </div>
+          <div style="border:1px solid #e8eaee;border-radius:8px;padding:14px;background:#f9fafb;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#8892b0;margin-bottom:8px;">LOAN DETAILS</div>
+            <div style="font-weight:700;font-size:13px;">${l.loanNumber||l.id}</div>
+            <div style="color:#4b5280;">Principal: ${fmt(P)}</div>
+            <div style="color:#4b5280;">Rate: ${l.interestRate}% · Terms: ${l.terms}</div>
+            <div style="color:#4b5280;">Payments: ${n} · Status: <strong style="color:${l.status==='paid'?'#16a34a':'#6c3dcc'};">${(l.status||'active').toUpperCase()}</strong></div>
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:10px;color:#16a34a;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Total Paid</div>
+            <div style="font-size:16px;font-weight:800;color:#16a34a;">${fmt(totalPaid)}</div>
+          </div>
+          <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:10px;color:#dc2626;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Current Balance</div>
+            <div style="font-size:16px;font-weight:800;color:#dc2626;">${fmt(bal)}</div>
+          </div>
+          <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:10px;color:#6c3dcc;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Payments Made</div>
+            <div style="font-size:16px;font-weight:800;color:#6c3dcc;">${loanPayments.length} / ${n}</div>
+          </div>
+        </div>
+
+        <!-- Schedule Table -->
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#8892b0;margin-bottom:8px;">AMORTIZATION SCHEDULE</div>
+        <table style="width:100%;border-collapse:collapse;font-size:11px;">
+          <thead>
+            <tr style="background:linear-gradient(90deg,#6c3dcc,#8b5cf6);color:#fff;">
+              <th style="padding:8px 6px;text-align:left;">#</th>
+              <th style="padding:8px 6px;text-align:right;">Bal. Before</th>
+              <th style="padding:8px 6px;text-align:right;">Rate</th>
+              <th style="padding:8px 6px;text-align:right;">Interest</th>
+              <th style="padding:8px 6px;text-align:right;">Payable</th>
+              <th style="padding:8px 6px;text-align:right;">Payment</th>
+              <th style="padding:8px 6px;text-align:center;">Date</th>
+              <th style="padding:8px 6px;text-align:right;">Bal. After</th>
+            </tr>
+          </thead>
+          <tbody>${schedRows}</tbody>
+        </table>
+
+        <!-- Footer -->
+        <div style="margin-top:24px;border-top:1px solid #e8eaee;padding-top:12px;
+          font-size:10px;color:#8892b0;display:flex;justify-content:space-between;">
+          <span>${companyName} · Loan Statement</span>
+          <span>Interest calculated using diminishing balance method</span>
+        </div>
+      </div>`;
+
+    // Mount hidden
+    const container = document.createElement('div');
+    container.style.cssText='position:absolute;left:-9999px;top:0;z-index:-1;';
+    container.innerHTML = reportHTML;
+    document.body.appendChild(container);
+
+    loadSub.textContent = 'Capturing image…';
+    await new Promise(r=>setTimeout(r,100));
+
+    const canvas = await html2canvas(container.querySelector('#a4report'),{
+      scale:2, useCORS:true, allowTaint:true,
+      backgroundColor:'#ffffff'
+    });
+
+    document.body.removeChild(container);
+
+    const imgData = canvas.toDataURL('image/png');
+    const fname   = `LoanReport_${(l.loanNumber||l.id).replace(/\s/g,'_')}_${b.lastName}.png`;
+
+    // Mobile: Web Share API
+    if(navigator.share && navigator.canShare){
+      try {
+        const res = await fetch(imgData);
+        const blob = await res.blob();
+        const file = new File([blob], fname, {type:'image/png'});
+        if(navigator.canShare({files:[file]})){
+          await navigator.share({files:[file],title:'Loan Report',text:`Loan statement for ${b.firstName} ${b.lastName}`});
+          toast('Report shared!','success');
+          overlay.classList.remove('show');
+          return;
+        }
+      } catch(e){ /* fall through to download */ }
+    }
+
+    // Desktop: download
+    const a = document.createElement('a');
+    a.href=imgData; a.download=fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    toast('Report downloaded! 📄','success');
+
+  } catch(err){
+    toast('Report generation failed: '+err.message,'error');
+    console.error(err);
+  } finally {
+    overlay.classList.remove('show');
+  }
+}
+</script>
+
+<script>
+(function(){
+  const t=localStorage.getItem('lma_theme')||'light';
+  document.documentElement.setAttribute('data-theme',t);
+})();
+</script>
+</body>
+</html>
