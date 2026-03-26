@@ -372,12 +372,7 @@ tr:hover td{background:var(--card);}
           </tr>
         </thead>
         <tbody id="clientTbody">
-          <tr><td colspan="11">
-            <div class="empty-state">
-              <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-              <div class="empty-title">Loading clients…</div>
-            </div>
-          </td></tr>
+          <!-- skeleton rows injected by JS -->
         </tbody>
       </table>
     </div>
@@ -507,8 +502,21 @@ const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov',
 const PAGE_SIZE=20;
 const safe=s=>s||(s===0?'0':'—');
 
-/* ── Auth ── */
-onAuthStateChanged(auth,async user=>{
+/* ── Skeleton loader ── */
+function showSkeletons(n=10){
+  const cols=11;
+  const widths=[['40%','55%'],['20%'],['22%'],['35%'],['30%'],['28%'],['22%'],['26%'],['30%'],['15%'],['15%','20%']];
+  const tbody=document.getElementById('clientTbody');
+  tbody.innerHTML=Array.from({length:n},(_,r)=>`<tr style="animation:fadeUp .18s ${r*.04}s both;">${
+    widths.map((ws,c)=>`<td>${
+      c===0
+        ? `<div style="display:flex;align-items:center;gap:.6rem;"><div class="skel" style="width:1.9rem;height:1.9rem;border-radius:50%;flex-shrink:0;"></div><div class="skel" style="height:.75rem;width:${ws[0]};border-radius:.3rem;"></div></div>`
+        : ws.map(w=>`<div class="skel" style="height:.72rem;width:${w};border-radius:.3rem;${ws.length>1?'margin-bottom:.3rem;':''}"></div>`).join('')
+    }</td>`).join('')
+  }</tr>`).join('');
+}
+showSkeletons();
+
   if(!user){window.location.href='login.html';return;}
   let sess=sessionStorage.getItem('lma_user');
   if(!sess){const snap=await getDoc(doc(db,'user_roles',user.uid));const role=snap.exists()?snap.data().role:'pending';if(role==='pending'){window.location.href='login.html';return;}sessionStorage.setItem('lma_user',JSON.stringify({uid:user.uid,email:user.email,displayName:user.displayName,photoURL:user.photoURL,role}));}
